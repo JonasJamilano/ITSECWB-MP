@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Manage Reviews</title>
+  <link rel="stylesheet" href="Manila.css">
+  <link rel="stylesheet" href="manilaAdmin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+        <h1>TasteCheck</h1>
+    </div>
+    <nav>
+        <ul>
+            <li><a>Home</a></li>
+            <li><a>Branches</a></li>
+            <li class="user-menu">
+              <a href="#" class="user-icon">
+                  <img src="User.jpg" alt="User Icon" />
+              </a>
+              <ul class="dropdown">
+                  <li><a href="User.html">My Profile</a></li>
+                  <li><a href="logout.html">Logout</a></li>
+              </ul>
+          </li>
+        </ul>
+    </nav>
+</header>
+
+
+<section class="branch-container">
+    <div class="branch-description">
+        <h2>Manila Branch</h2>
+        <p>
+            Welcome to TasteCheck's Manila branch! Located in the heart of the city, our café offers a warm and inviting ambiance perfect for coffee lovers and casual diners. Enjoy our signature coffee blends, freshly baked pastries, and a cozy atmosphere that makes every visit a delight.
+        </p>
+        <p>
+            Whether you're here for a quick coffee break or a relaxing afternoon, our Manila branch provides the perfect setting with comfortable seating, free Wi-Fi, and a friendly staff ready to serve you.
+        </p>
+    </div>
+
+    <div class="slideshow-container">
+        <div class="slide fade">
+            <img src="Manila.jpg" alt="Manila Branch Image 1">
+        </div>
+        <div class="slide fade">
+            <img src="Manila1.jpg" alt="Manila Branch Image 2">
+        </div>
+        <div class="slide fade">
+            <img src="Manila2.jpg" alt="Manila Branch Image 3">
+        </div>
+    </div>
+  </section>
+
+  <script>
+    let slideIndex = 0;
+    function showSlides() {
+        let slides = document.getElementsByClassName("slide");
+        for (let i = 0; i < slides.length; i++) {
+            slides[i].style.display = "none";
+        }
+        slideIndex++;
+        if (slideIndex > slides.length) { slideIndex = 1; }
+        slides[slideIndex - 1].style.display = "block";
+        setTimeout(showSlides, 3000);
+    }
+    showSlides();
+</script>
+
+  <div class="adminTitle"><h1>Manila Branch Reviews</h1></div>
+
+  <!-- Filter by Star Rating -->
+  <div class="adminfilter">
+    <label for="star-filter">Filter by star rating:</label>
+    <select id="star-filter" name="star-filter">
+      <option value="all">All</option>
+      <option value="5">5 Star</option>
+      <option value="4">4 Star</option>
+      <option value="3">3 Star</option>
+      <option value="2">2 Star</option>
+      <option value="1">1 Star</option>
+    </select>
+  </div>
+
+  <div class="admin-container" id="admin-container">
+  </div>
+
+  <script>
+
+    const reviews = [
+      {
+        id: 1,
+        name: "TE",
+        rating: 5,
+        text: "Best service ever! Thanks!",
+        date: "October 10, 2022",
+        reply: "" // Admin reply
+      },
+      {
+        id: 2,
+        name: "DK",
+        rating: 4,
+        text: "Really good, but there's some room for improvement.",
+        date: "January 15, 2023",
+        reply: ""
+      },
+      {
+        id: 3,
+        name: "JL",
+        rating: 1,
+        text: "Not satisfied at all.",
+        date: "March 2, 2023",
+        reply: ""
+      }
+    ];
+
+    // Current filter setting
+    let selectedFilter = "all";
+
+    // Grab elements
+    const starFilter = document.getElementById("star-filter");
+    const adminContainer = document.getElementById("admin-container");
+
+    // Listen for filter changes
+    starFilter.addEventListener("change", () => {
+      selectedFilter = starFilter.value;
+      renderReviews();
+    });
+
+    // Convert numeric rating to star symbols
+    function getStars(rating) {
+      let stars = "";
+      for (let i = 1; i <= 5; i++) {
+        stars += i <= rating ? "★" : "☆";
+      }
+      return stars;
+    }
+
+    // Render reviews based on selected filter
+    function renderReviews() {
+      adminContainer.innerHTML = ""; // Clear previous content
+
+      reviews.forEach(review => {
+        if (selectedFilter !== "all" && review.rating.toString() !== selectedFilter) {
+          return;
+        }
+
+        const reviewDiv = document.createElement("div");
+        reviewDiv.className = "review-item";
+        reviewDiv.setAttribute("data-id", review.id);
+
+        reviewDiv.innerHTML = `
+          <div class="review-header">
+            <h3>${review.name}</h3>
+            <span class="review-date">${review.date}</span>
+          </div>
+          <div class="star-rating">${getStars(review.rating)}</div>
+          <div class="review-text">${review.text}</div>
+          <div class="admin-actions">
+            <button class="reply-btn">Reply</button>
+            <button class="delete-btn">Delete Review</button>
+          </div>
+        `;
+
+        const replySection = document.createElement("div");
+        replySection.className = "reply-section";
+        replySection.innerHTML = `
+          <p><strong>Admin Reply:</strong> <span class="reply-text">${review.reply}</span></p>
+          <div class="reply-form" style="display: none;">
+            <textarea rows="3" placeholder="Type your reply..."></textarea>
+            <button class="save-reply-btn">Save</button>
+            <button class="cancel-reply-btn">Cancel</button>
+          </div>
+        `;
+        reviewDiv.appendChild(replySection);
+
+        adminContainer.appendChild(reviewDiv);
+      });
+
+      attachAdminActions();
+    }
+
+    function attachAdminActions() {
+      document.querySelectorAll(".review-item").forEach(item => {
+        const reviewId = parseInt(item.getAttribute("data-id"));
+        const reviewData = reviews.find(r => r.id === reviewId);
+
+        const replyBtn = item.querySelector(".reply-btn");
+        const deleteBtn = item.querySelector(".delete-btn");
+        const replySection = item.querySelector(".reply-section");
+        const replyForm = replySection.querySelector(".reply-form");
+        const replyTextSpan = replySection.querySelector(".reply-text");
+        const saveReplyBtn = replyForm.querySelector(".save-reply-btn");
+        const cancelReplyBtn = replyForm.querySelector(".cancel-reply-btn");
+        const textarea = replyForm.querySelector("textarea");
+
+        replyBtn.addEventListener("click", () => {
+         
+          replyForm.style.display = "block";
+          textarea.value = reviewData.reply;
+        });
+
+        saveReplyBtn.addEventListener("click", () => {
+          const newReply = textarea.value.trim();
+          replyTextSpan.textContent = newReply;
+          reviewData.reply = newReply; // Update the local data
+          replyForm.style.display = "none";
+        });
+
+        cancelReplyBtn.addEventListener("click", () => {
+          replyForm.style.display = "none";
+        });
+
+        // DELETE
+        deleteBtn.addEventListener("click", () => {
+          const confirmed = confirm("Are you sure you want to delete this review?");
+          if (confirmed) {
+            // Remove from the array
+            const index = reviews.findIndex(r => r.id === reviewId);
+            if (index !== -1) {
+              reviews.splice(index, 1);
+            }
+            // Re-render the list
+            renderReviews();
+          }
+        });
+      });
+    }
+
+    // Initial render
+    renderReviews();
+  </script>
+
+<footer>
+  <p>&copy; 2025 TasteCheck. All Rights Reserved.</p>
+  <a href="#">Login</a> | <a href="#">Sign Up</a>
+</footer>
+</body>
+</html>

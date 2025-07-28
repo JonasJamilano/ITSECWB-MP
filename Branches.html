@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Branches - TasteCheck</title>
+    <link rel="stylesheet" href="Branches.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <h1>TasteCheck</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="Homepage.html">Home</a></li>
+                <li><a href="search.html">Search</a></li>
+                <li class="user-menu">
+                    <a href="#" class="user-icon">
+                        <img id="userAvatar" src="user.jpg" alt="User Profile">
+                    </a>
+                    <ul class="dropdown" id="user-dropdown"></ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="main-content">
+        <section class="branches-title">
+            <h2>Cafe To Visit</h2>
+        </section>
+
+        <section class="branches-container">
+            <div class="branch">
+                <a href="Manila.html">
+                    <img src="Manila.jpg" alt="Manila Branch">
+                    <div class="branch-info">
+                        <h3>Manila</h3>
+                        <p>A cozy escape in the heart of Manila, Brew Haven offers expertly crafted coffee in a warm and inviting atmosphere.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="branch">
+                <a href="QuezonCity.html">
+                    <img src="QC.jpg" alt="QC Branch">
+                    <div class="branch-info">
+                        <h3>Quezon City</h3>
+                        <p>Inspired by the beauty of dawn, Aurora Café provides a peaceful retreat with rich, handcrafted coffee.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="branch">
+                <a href="Rizal.html">
+                    <img src="Rizal.jpg" alt="Rizal Branch">
+                    <div class="branch-info">
+                        <h3>Rizal</h3>
+                        <p>Tagpuan Café is the perfect spot to gather, share stories, and enjoy a cup of kapeng barako.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="branch">
+                <a href="Tagaytay.html">
+                    <img src="Tagaytay.jpg" alt="Tagaytay Branch">
+                    <div class="branch-info">
+                        <h3>Tagaytay</h3>
+                        <p>Amihan Café offers cool breezes, stunning lake views, and locally brewed coffee.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="branch">
+                <a href="Davao.html">
+                    <img src="Davao.jpg" alt="Davao Branch">
+                    <div class="branch-info">
+                        <h3>Davao</h3>
+                        <p>Datu’s Brew celebrates Mindanao’s rich coffee heritage with locally sourced beans.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </div> <!-- End of main-content -->
+
+    <footer>
+        <p>&copy; 2025 TasteCheck. All Rights Reserved.</p>
+        IG:@TasteCheck | FB:TasteCheck
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userDropdown = document.getElementById("user-dropdown");
+            const userAvatar = document.getElementById("userAvatar");
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            if (user) {
+                // Update avatar if user has uploaded one
+                if (user.avatar) {
+                    userAvatar.src = user.avatar;
+                } else {
+                    userAvatar.src = "user.jpg"; // Default avatar
+                }
+
+                userDropdown.innerHTML = `
+                    <li><a href="user.html">My Profile</a></li>
+                    <li><a href="#" id="logout">Logout</a></li>
+                `;
+
+                document.getElementById("logout").addEventListener("click", function () {
+                    localStorage.removeItem("user");
+                    userAvatar.src = "user.jpg"; // Reset avatar
+                    window.location.href = "logout.html";
+                });
+            } else {
+                userDropdown.innerHTML = `
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="register.html">Sign Up</a></li>
+                `;
+            }
+        });
+    </script>
+    
+
+</body>
+</html>

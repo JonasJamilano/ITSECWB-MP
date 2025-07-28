@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TasteCheck - Home</title>
+    <link rel="stylesheet" href="Homepage.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>TasteCheck</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="Homepage.html">Home</a></li>
+                <li><a href="Branches.html">Cafe</a></li>
+                <li><a href="search.html">Search</a></li>
+                <li class="user-menu">
+                    <img id="userAvatar" src="user.jpg" alt="User Profile">
+                    <ul class="dropdown" id="user-dropdown">
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-text">
+            <h2 class="hero-heading">Welcome to TasteCheck!</h2>
+            <p>Honest reviews. Exceptional service. Find the best café experience near you.</p>
+        </div>
+    </section>
+
+    <section class="branches-section" id="branches">
+        <h2 class="branches-heading">Cafe To Visit</h2>
+        <p>Read customer reviews and experiences from our different locations.</p>
+        <div class="branches-list">
+            <button class="branch" style="background-image: url('Manila.jpg');" onclick="window.location.href='Manila.html'">Manila</button>
+            <button class="branch" style="background-image: url('QC.jpg');" onclick="window.location.href='QuezonCity.html'">Quezon City</button>
+            <button class="branch" style="background-image: url('Rizal.jpg');" onclick="window.location.href='Rizal.html'">Rizal</button>
+            <button class="branch" style="background-image: url('Tagaytay.jpg');" onclick="window.location.href='Tagaytay.html'">Tagaytay</button>
+            <button class="branch" style="background-image: url('Davao.jpg');" onclick="window.location.href='Davao.html'">Davao</button>
+        </div>
+    </section>
+
+    <section class="featured-product">
+        <h2>Trivia Time!</h2>
+        <div class="featured-product-content">
+            <div class="featured-product-image-container">
+                <img src="Coffee.jpg" alt="Best Espresso" class="featured-product-image"/>
+            </div>
+            <div class="featured-product-description">
+                <p>Did you know that the coffee business in the Philippines has been booming since 2019? The rise of specialty coffee, social media trends, and aesthetic cafés made coffee culture more popular than ever. Drinks like Spanish Latte and Dirty Matcha became favorites, while local shops like Brew Haven gained traction. The pandemic also fueled home brewing, increasing demand for quality beans from Sagada, Benguet, and Bukidnon. With Filipinos embracing both café-hopping and home brewing, the coffee trend continues to thrive.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="history-description">
+        <h2 class="history-heading">The History of TasteCheck</h2>
+        <div class="history-info">
+            <p>Tastecheck was founded by three classmates who shared a deep love for coffee and a curiosity about people's dining experiences. Their frequent café visits sparked conversations about service quality, food taste, and overall ambiance, leading them to realize the importance of honest customer feedback. Wanting to create a space where people could share their experiences and help others discover great places to eat, they launched Tastecheck—a platform dedicated to genuine restaurant reviews, guiding food lovers to the best dining spots through real customer insights.</p>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 TasteCheck. All Rights Reserved.</p>
+        IG:@TasteCheck
+        FB:TasteCheck
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userDropdown = document.getElementById("user-dropdown");
+            const userAvatar = document.getElementById("userAvatar");
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            if (user) {
+                // Update avatar if user has uploaded one
+                if (user.avatar) {
+                    userAvatar.src = user.avatar;
+                } else {
+                    userAvatar.src = "user.jpg"; // Default avatar
+                }
+
+                userDropdown.innerHTML = `
+                    <li><a href="user.html">My Profile</a></li>
+                    <li><a href="#" id="logout">Logout</a></li>
+                `;
+
+                // Logout function
+                document.getElementById("logout").addEventListener("click", function () {
+                    localStorage.removeItem("user");
+                    userAvatar.src = "user.jpg"; // Reset avatar
+                    window.location.href = "logout.html";
+                });
+            } else {
+                userDropdown.innerHTML = `
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="register.html">Sign Up</a></li>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

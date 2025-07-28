@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - Café Delight</title>
+    <link rel="stylesheet" href="result.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>Café Delight</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="Homepage.html">Home</a></li>
+                <li><a href="Branches.html">Branches</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li class="user-menu">
+                    <a href="#" class="user-icon">
+                        <img src="User.jpg" alt="User Icon" />
+                    </a>
+                    <ul class="dropdown" id="user-dropdown">
+                        <li><a href="User.html">My Profile</a></li>
+                        <li><a href="logout.html">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="content-container">
+        <div class="results-container">
+            <h2>Search Results</h2>
+            <p>------------------------------------</p>
+            <p>Select a branch to view details.</p>
+            <p>------------------------------------</p>
+
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search for a branch..." />
+                <button id="search-button">Search</button>
+            </div>
+
+    <div class="filter-rating">
+        <p>---------------------------------------------</p>
+        <label for="rating">Filter by Rating:</label>
+        <select id="rating">
+            <option value="all">All Ratings</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars & Up</option>
+            <option value="3">3 Stars & Up</option>
+        </select>
+    </div>
+
+            <div class="results-content">
+                <div class="results-list">
+                    <a href="Manila.html" class="result-item">
+                        <img src="Manila.jpg" alt="Manila Branch">
+                        <p>Manila</p>
+                    </a>
+                    <a href="QuezonCity.html" class="result-item">
+                        <img src="QC.jpg" alt="Quezon City Branch">
+                        <p>Quezon City</p>
+                    </a>
+                    <a href="Rizal.html" class="result-item">
+                        <img src="Rizal.jpg" alt="Rizal Branch">
+                        <p>Rizal</p>
+                    </a>
+                    <a href="Tagaytay.html" class="result-item">
+                        <img src="Tagaytay.jpg" alt="Tagaytay Branch">
+                        <p>Tagaytay</p>
+                    </a>
+                    <a href="Davao.html" class="result-item">
+                        <img src="Davao.jpg" alt="Davao Branch">
+                        <p>Davao</p>
+                    </a>
+                </div>
+            
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Café Delight. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userDropdown = document.getElementById("user-dropdown");
+            const user = JSON.parse(localStorage.getItem("user"));
+      
+            if (user) {
+                // If logged in, show profile and logout
+                userDropdown.innerHTML = `
+                    <li><a href="user.html">My Profile</a></li>
+                    <li><a href="#" id="logout">Logout</a></li>
+                `;
+      
+                // Logout function
+                document.getElementById("logout").addEventListener("click", function () {
+                    localStorage.removeItem("user");
+                    window.location.href = "logout.html";
+                });
+            } else {
+                // If not logged in (or after logout), show login and sign-up
+                userDropdown.innerHTML = `
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="register.html">Sign Up</a></li>
+                `;
+            }
+        });
+      </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Get search query from the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get("query") ? urlParams.get("query").toLowerCase() : "";
+    
+            // Select all result items (branches)
+            const resultItems = document.querySelectorAll(".result-item");
+    
+            function filterResults(query) {
+                let hasResults = false; // Track if any results match
+    
+                resultItems.forEach(item => {
+                    const branchName = item.querySelector("p").textContent.toLowerCase();
+                    if (!query) {
+                        item.style.display = "none"; // Hide all results if input is empty
+                    } else if (branchName.includes(query)) {
+                        item.style.display = "block"; // Show matching results
+                        hasResults = true;
+                    } else {
+                        item.style.display = "none"; // Hide non-matching results
+                    }
+                });
+    
+                // If no results match, display a message
+                document.getElementById("no-results").style.display = hasResults ? "none" : "block";
+            }
+    
+            const noResultsMessage = document.createElement("p");
+            noResultsMessage.id = "no-results";
+            noResultsMessage.style.display = "none";
+            noResultsMessage.style.textAlign = "center";
+            noResultsMessage.style.fontWeight = "bold";
+            noResultsMessage.textContent = "No results found.";
+            document.querySelector(".results-container").appendChild(noResultsMessage);
+    
+            // Initial filtering from URL parameter
+            filterResults(searchQuery);
+    
+            // Add event listener to search bar
+            document.getElementById("search-input").addEventListener("input", function () {
+                filterResults(this.value.toLowerCase());
+            });
+    
+            // Add event listener to search button
+            document.getElementById("search-button").addEventListener("click", function () {
+                const query = document.getElementById("search-input").value.trim();
+                filterResults(query.toLowerCase());
+            });
+        });
+    </script>
+</body>
+</html>

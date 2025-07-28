@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TasteCheck</title>
+    <link rel="stylesheet" href="Login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <h1>TasteCheck</h1>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="Homepage.html">Home</a></li>
+            <li><a href="search.html">Search</a></li>
+            <li><a href="Branches.html">Cafe</a></li>
+            <li class="user-menu">
+                <a href="#" class="user-icon">
+                    <img src="User.jpg" alt="User Icon" />
+                </a>
+                <ul class="dropdown"></ul> 
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<section class="login-container">
+    <div class="login-box">
+        <h2>Login to Your Account</h2>
+        <form id="login-form">  
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+            <div class="rememberme">
+                <input type="checkbox" id="rememberme" name="rememberme"> 
+                <label for="rememberme">Remember Me</label>
+            </div>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p class="signup-link">Don't have an account? <a href="register.html">Sign up</a></p>
+    </div>
+</section>
+
+<footer>
+    <p>&copy; 2025 TasteCheck. All Rights Reserved.</p>
+</footer>
+
+<script>
+
+function logout() {
+    fetch("http://localhost:3000/logout", { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.message);
+            localStorage.removeItem("user");
+            window.location.href = "Homepage.html"; // Redirect to homepage
+        })
+        .catch(error => console.error("❌ Logout error:", error));
+}
+
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM fully loaded and script running.");
+    
+        // Handle login form submission
+        const loginForm = document.getElementById("login-form");
+    
+        if (loginForm) {
+            loginForm.addEventListener("submit", async function (event) {
+                event.preventDefault(); // Prevent page refresh
+                console.log("Login form submitted");
+    
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
+    
+                console.log("Email:", email);
+                console.log("Password:", password);
+    
+                try {
+                    const response = await fetch("http://localhost:3000/login", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ email, password }),
+                    });
+    
+                    const data = await response.json();
+                    console.log("Response received:", data);
+    
+                    if (response.ok) {
+                        console.log("Login successful!");
+                        localStorage.setItem("user", JSON.stringify(data.user));
+                        window.location.href = "Homepage.html"; // Redirect to homepage
+                    } else {
+                        console.error("Login failed:", data.message);
+                        alert(data.message); // Show error message
+                    }
+                } catch (error) {
+                    console.error("Login error:", error);
+                    alert("An error occurred. Please try again.");
+                }
+            });
+        } else {
+            console.error("Login form not found.");
+        }
+    });
+    </script>
+    
+
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TasteCheck - Home</title>
+    <link rel="stylesheet" href="Manila.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>TasteCheck</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="Homepage.html">Home</a></li>
+                <li><a href="Branches.html">Cafe</a></li>
+                <li><a href="search.html">Search</a></li>
+                <li class="user-menu">
+                    <img id="userAvatar" src="user.jpg" alt="User Profile">
+                    <ul class="dropdown" id="user-dropdown">
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="branch-container">
+        <div class="branch-description">
+            <h2>Amihan Café</h2>
+            <p>
+                Amihan Café is a breathtaking getaway in Tagaytay, offering a front-row seat to the majestic Taal Volcano. Perched on a scenic ridge, this cozy café lets you enjoy a warm cup of coffee while taking in the cool breeze and stunning panoramic views of Taal Lake.
+            <p>
+                Whether you're here for a peaceful morning, a romantic afternoon, or a relaxing sunset, Amihan Café provides the perfect blend of nature’s beauty and rich, locally brewed flavors. Sit back, sip, and savor the view—because great coffee tastes even better with a spectacular backdrop.
+            </p>
+        </div>
+
+        <div class="slideshow-container">
+            <div class="slide fade"><img src="Tagaytay1.jpg" alt="Tagaytay1 Image 1"></div>
+            <div class="slide fade"><img src="Tagaytay2.jpg" alt="Tagaytay2 Image 2"></div>
+            <div class="slide fade"><img src="Tagaytay3.jpg" alt="Tagaytay3 Image 3"></div>
+        </div>
+    </section>
+
+    <script>
+        let slideIndex = 0;
+        function showSlides() {
+            let slides = document.getElementsByClassName("slide");
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
+            }
+            slideIndex++;
+            if (slideIndex > slides.length) { slideIndex = 1; }
+            slides[slideIndex - 1].style.display = "block";
+            setTimeout(showSlides, 3000);
+        }
+        showSlides();
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userDropdown = document.getElementById("user-dropdown");
+            const userAvatar = document.getElementById("userAvatar");
+            const user = JSON.parse(localStorage.getItem("user"));
+      
+            if (user) {
+                // Update avatar if user has uploaded one
+                if (user.avatar) {
+                    userAvatar.src = user.avatar;
+                } else {
+                    userAvatar.src = "user.jpg"; // Default avatar
+                }
+      
+                // Populate dropdown menu
+                userDropdown.innerHTML = `
+                    <li><a href="user.html">My Profile</a></li>
+                    <li><a href="#" id="logout">Logout</a></li>
+                `;
+      
+                // Logout function
+                document.getElementById("logout").addEventListener("click", function () {
+                    localStorage.removeItem("user");
+                    userAvatar.src = "user.jpg"; // Reset avatar
+                    window.location.href = "logout.html";
+                });
+            } else {
+                // Default dropdown for non-logged-in users
+                userDropdown.innerHTML = `
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="register.html">Sign Up</a></li>
+                `;
+            }
+        });
+    </script>
+
+<div class="review-system-container">
+  <div class="review-system-header">
+      <div class="title">Reviews for Amihan Café</div>
+  </div>
+  <div class="review-list"></div>
+  <div class="create-review">
+      <h2>Write a Review</h2>
+      <form id="create-review-form">
+          <label for="review-text">Review:</label>
+          <textarea id="review-text" name="review-text" rows="4" required></textarea>
+
+          <div class="rating">
+              <input type="radio" name="rating" value="5" id="star5"><label for="star5">★★★★★</label>
+              <input type="radio" name="rating" value="4" id="star4"><label for="star4">★★★★</label>
+              <input type="radio" name="rating" value="3" id="star3"><label for="star3">★★★</label>
+              <input type="radio" name="rating" value="2" id="star2"><label for="star2">★★</label>
+              <input type="radio" name="rating" value="1" id="star1"><label for="star1">★</label>
+          </div>
+
+          <button type="submit">Submit</button>
+      </form>
+  </div>
+</div>
+
+<script>
+  const loggedInUser = JSON.parse(localStorage.getItem("user")) || null;
+
+// Load reviews on page load
+async function loadReviews() {
+  try {
+      const response = await fetch("http://localhost:3000/reviews");
+      const reviews = await response.json();
+      const reviewList = document.querySelector(".review-list");
+      reviewList.innerHTML = ""; // Clear the list before adding new reviews
+
+      reviews.forEach(review => {
+          addReviewToDOM(review._id, review.username, review.text, review.rating, review.date, review.userId);
+      });
+  } catch (error) {
+      console.log("Error fetching reviews.");
+  }
+}
+
+// Add review to the DOM
+function addReviewToDOM(reviewId, username, text, rating, date, userId) {
+  const reviewList = document.querySelector(".review-list");
+  const newReview = document.createElement("div");
+  newReview.classList.add("review-item");
+  newReview.dataset.id = reviewId;
+
+  let editDeleteButtons = "";
+  if (loggedInUser && loggedInUser._id === userId) {
+      editDeleteButtons = `
+          <button class="edit-btn" data-id="${reviewId}">Edit</button>
+          <button class="delete-btn" data-id="${reviewId}">Delete</button>
+      `;
+  }
+
+  newReview.innerHTML = `
+      <h3>${username}</h3>
+      <p class="review-text">${text}</p>
+      <div class="star-rating">${generateStars(rating)}</div>
+      <small>Date: ${date}</small>
+      <div>${editDeleteButtons}</div>
+  `;
+
+  reviewList.prepend(newReview);
+}
+
+// Generate star rating display
+function generateStars(rating) {
+  let stars = "";
+  for (let i = 0; i < 5; i++) {
+      stars += i < rating ? "★" : "☆";
+  }
+  return `<span class="stars">${stars}</span>`;
+}
+
+// Handle review submission
+document.getElementById("create-review-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!loggedInUser) {
+      alert("Please log in to submit a review.");
+      return;
+  }
+
+  const reviewText = document.getElementById("review-text").value.trim();
+  const rating = document.querySelector('input[name="rating"]:checked')?.value;
+
+  if (!reviewText || !rating) {
+      alert("Please enter a review and select a rating.");
+      return;
+  }
+
+  try {
+      const response = await fetch("http://localhost:3000/reviews", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+              userId: loggedInUser._id,
+              username: loggedInUser.username,
+              rating: parseInt(rating),
+              text: reviewText
+          })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+          addReviewToDOM(data.review._id, loggedInUser.username, reviewText, parseInt(rating), new Date().toLocaleDateString(), loggedInUser._id);
+          document.getElementById("create-review-form").reset();
+      } else {
+          alert(data.message);
+      }
+  } catch (error) {
+      alert("Error submitting review.");
+  }
+});
+
+// Handle edit and delete using event delegation
+document.querySelector(".review-list").addEventListener("click", async function (event) {
+  const target = event.target;
+  const reviewId = target.dataset.id;
+
+  // Edit review
+  if (target.classList.contains("edit-btn")) {
+      const reviewItem = target.closest(".review-item");
+      const currentText = reviewItem.querySelector(".review-text").textContent;
+      const newText = prompt("Edit your review:", currentText);
+      if (!newText) return;
+
+      const newRating = prompt("Edit your rating (1-5):");
+      if (!newRating || newRating < 1 || newRating > 5) {
+          alert("Please enter a valid rating (1-5).");
+          return;
+      }
+
+      try {
+          const response = await fetch(`http://localhost:3000/reviews/${reviewId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: newText, rating: parseInt(newRating) })
+          });
+
+          if (response.ok) {
+              alert("Review updated successfully!");
+              loadReviews(); // Reload reviews after update
+          } else {
+              alert("Error updating review.");
+          }
+      } catch (error) {
+          alert("Error updating review.");
+      }
+  }
+
+  // Delete review
+  if (target.classList.contains("delete-btn")) {
+      const confirmDelete = confirm("Are you sure you want to delete this review?");
+      if (!confirmDelete) return;
+
+      try {
+          const response = await fetch(`http://localhost:3000/reviews/${reviewId}`, { method: "DELETE" });
+
+          if (response.ok) {
+              alert("Review deleted successfully!");
+              loadReviews(); // Reload reviews after deletion
+          } else {
+              alert("Error deleting review.");
+          }
+      } catch (error) {
+          alert("Error deleting review.");
+      }
+  }
+});
+
+// Load reviews on page load
+loadReviews();
+
+</script>
+
+  
+    <footer>
+        <p>&copy; 2025 TasteCheck. All rights reserved.</p>
+    </footer>
+</body>
+</html>

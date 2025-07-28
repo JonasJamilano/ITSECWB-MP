@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout - TasteCheck</title>
+    <link rel="stylesheet" href="logout.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="logout-container">
+        <h2>You have been logged out.</h2>
+        <p>Thank you for visiting TasteCheck! See you again soon.</p>
+        <div class="buttons">
+            <button onclick="goToHomepage()">Go back to Homepage</button>
+            <button onclick="closeWindow()">Exit</button>
+        </div>
+    </div>
+
+    <script>
+        function goToHomepage() {
+            window.location.href = "homepage.html"; // Redirect to homepage
+        }
+
+        function closeWindow() {
+            window.open('', '_self', ''); 
+            window.close(); // Close the browser tab
+        }
+    </script>
+</body>
+</html>

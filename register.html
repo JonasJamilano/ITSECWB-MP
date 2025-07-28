@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - TasteCheck</title>
+    <link rel="stylesheet" href="register.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <h1>TasteCheck</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="homepage.html">Home</a></li>
+                <li><a href="Branches.html">Cafe</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Registration Form Section -->
+    <section class="register-container">
+        <h2>Create an Account</h2>
+        <p>Join our community and share your café experiences!</p>
+
+        <form id="registerForm" enctype="multipart/form-data">
+            <!-- Username Input -->
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required placeholder="Enter your username">
+
+            <!-- Email Input -->
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your email">
+
+            <!-- Password Input -->
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
+            <span id="passwordError" style="color:red; display:none;"></span>
+
+            <!-- Avatar Upload -->
+            <label for="avatar">Upload Avatar</label>
+            <input type="file" id="avatar" name="avatar" accept="image/*">
+
+            <!-- Short Description -->
+            <label for="description">Short Description (Optional)</label>
+            <textarea id="description" name="description" placeholder="Tell us something about yourself..."></textarea>
+
+            <!-- Submit Button -->
+            <button type="submit">Register</button>
+        </form>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 TasteCheck. All Rights Reserved.</p>
+        <a href="login.html">Login</a> | <a href="#">Sign Up</a>
+    </footer>
+
+    <script>
+    document.getElementById("registerForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const password = document.getElementById("password").value;
+        const passwordError = document.getElementById("passwordError");
+
+        // Password policy: min 8 chars, 1 upper, 1 lower, 1 digit, 1 special char
+        const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+        if (!complexityRegex.test(password)) {
+            passwordError.textContent = "❌ Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character.";
+            passwordError.style.display = "block";
+            return;
+        } else {
+            passwordError.textContent = "";
+            passwordError.style.display = "none";
+        }
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch("http://localhost:3000/register", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(data.message);
+                window.location.href = "Homepage.html";
+            } else {
+                // 👇 Show server-side error in #passwordError span if relevant
+                if (data.message.toLowerCase().includes("password")) {
+                    passwordError.textContent = data.message;
+                    passwordError.style.display = "block";
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            }
+        } catch (error) {
+            console.error("❌ Registration Error:", error);
+            alert("An error occurred. Please try again.");
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f5f5f5;
+    color: #4e4e4e;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Ensure content pushes footer to the bottom */
+.main-content {
+    flex: 1;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #3a2d22;
+    padding: 20px;
+    color: white;
+    font-family: 'Playfair Display', serif;
+}
+
+header .logo h1 {
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+header nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+}
+
+header nav ul li {
+    margin: 0 15px;
+}
+
+header nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+header nav ul li a:hover {
+    color: #e0d4c1;
+}
+
+/* User Menu */
+.user-menu {
+    position: relative;
+    display: inline-block;
+}
+
+/* User Icon */
+.user-icon img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.user-icon img:hover {
+    transform: scale(1.1);
+}
+
+/* Dropdown Menu */
+.user-menu .dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 150px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    z-index: 100;
+}
+
+/* Dropdown Items */
+.user-menu .dropdown li {
+    list-style: none;
+    padding: 10px;
+    text-align: center;
+}
+
+.user-menu .dropdown li a {
+    text-decoration: none;
+    color: #3a2d22;
+    display: block;
+    font-size: 1rem;
+    transition: background 0.3s ease;
+}
+
+/* Show dropdown on hover */
+.user-menu:hover .dropdown {
+    display: block;
+}
+
+/* Hover Effect for Dropdown */
+.user-menu .dropdown li a:hover {
+    background-color: #e0d4c1;
+}
+
+/* Navigation Links */
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+nav ul li a:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Remove default link styling */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+a:hover {
+    color: #000000;
+}
+
+/* Branches Section */
+.branches-title {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.branches-title h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: #333;
+}
+
+/* Branches Grid */
+.branches-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 30px;
+    justify-items: center;
+}
+
+/* Individual Branch Card */
+.branch {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    max-width: 350px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.branch:hover {
+    transform: scale(1.05);
+}
+
+.branch img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.branch-info {
+    padding: 20px;
+    text-align: center;
+}
+
+.branch-info h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.branch-info p {
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Footer */
+footer {
+    background-color: #3a2d22;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+    position: relative;
+    bottom: 0;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+}

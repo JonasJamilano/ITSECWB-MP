@@ -1,0 +1,701 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f5f5f5;
+    color: #4e4e4e;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #3a2d22;
+    padding: 20px;
+    color: white;
+    font-family: 'Playfair Display', serif;
+}
+
+header .logo h1 {
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+
+header nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+}
+
+header nav ul li {
+    margin: 0 15px;
+}
+
+header nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* User Menu Dropdown */
+.user-menu {
+  position: relative;
+  display: inline-block;
+}
+
+/* Hide the dropdown by default */
+.user-menu .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: white;
+  min-width: 150px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  z-index: 100;
+}
+
+/* Style for dropdown links */
+.user-menu .dropdown li {
+  list-style: none;
+  padding: 10px;
+  text-align: center;
+}
+
+.user-menu .dropdown li a {
+  text-decoration: none;
+  color: #3a2d22;
+  display: block;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+/* Hover effect */
+.user-menu .dropdown li a:hover {
+  background-color: #e0d4c1;
+}
+
+/* Show dropdown when hovering over the user icon */
+.user-menu:hover .dropdown {
+  display: block;
+}
+
+/* User Icon Styling */
+.user-icon img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+/* Branch Section */
+.branch-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 60px 20px;
+}
+
+.branch-description {
+    width: 50%;
+    text-align: left;
+}
+
+.branch-description h2 {
+    font-size: 2.8rem;
+    color: #3a2d22;
+    font-family: 'Playfair Display', serif;
+}
+
+.branch-description p {
+    font-size: 1.2rem;
+    color: #4e4e4e;
+    line-height: 1.6;
+    margin: 15px 0;
+}
+
+/* Slideshow */
+.slideshow-container {
+    width: 50%;
+    max-width: 600px;
+    position: relative;
+}
+
+.slide {
+    display: none;
+    width: 100%;
+}
+
+.slide img {
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Review Section */
+.review-section {
+    text-align: center;
+    padding: 20px;
+    background-color: #b6977d;
+    width: 50%;
+    margin: 40px auto;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.review-section h2 {
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.review-section textarea {
+    width: 90%;
+    max-width: 400px;
+    height: 100px;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    font-size: 1rem;
+}
+
+.review-section button {
+    padding: 8px 15px;
+    font-size: 1rem;
+    background-color: #3a2d22;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 10px;
+}
+
+.review-section button:hover {
+    background-color: #2a1d16;
+}
+
+/* Footer */
+footer {
+    background-color: #3a2d22;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.review-system-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #fff;
+        border: 1px solid #ccc;
+      }
+
+      .review-system-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+      }
+      .review-system-header .title {
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+      .review-system-header .review-btn {
+        background-color: #0066cc;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .review-system-header .review-btn:hover {
+        background-color: #0055aa;
+      }
+
+      .review-summary {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+      }
+      .average-rating {
+        text-align: center;
+        margin-right: 40px;
+      }
+      .average-rating h2 {
+        font-size: 2rem;
+        margin: 0;
+      }
+      .average-rating p {
+        margin: 5px 0;
+        font-weight: bold;
+        color: #666;
+      }
+      .distribution {
+        flex: 1;
+      }
+      .distribution-row {
+        display: flex;
+        align-items: center;
+        margin: 5px 0;
+        font-size: 0.9rem;
+      }
+      .distribution-row span {
+        width: 50px;
+      }
+      .bar-bg {
+        width: 200px;
+        height: 10px;
+        background-color: #eee;
+        display: inline-block;
+        margin: 0 10px;
+        border-radius: 5px;
+        position: relative;
+      }
+      .bar-fill {
+        height: 100%;
+        background-color: #f90;
+        border-radius: 5px;
+      }
+
+      .filter {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+      }
+      .filter label {
+        margin-right: 10px;
+        font-weight: bold;
+      }
+      .filter select {
+        padding: 5px;
+        font-size: 1rem;
+      }
+
+      .review-list .review-item {
+        border-top: 1px solid #ddd;
+        padding: 15px 0;
+        position: relative;
+      }
+      .review-list .review-item:first-child {
+        border-top: none;
+      }
+      .review-item h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      .star-rating {
+        color: #f90;
+        margin: 5px 0;
+      }
+      .review-item p {
+        margin: 5px 0;
+      }
+      .review-item small {
+        color: #888;
+      }
+
+      
+      /* Helpful / Unhelpful */
+      .helpful-actions {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .helpful-btn, .unhelpful-btn {
+        background-color: #eee;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .helpful-btn:hover {
+        background-color: #d4ffd4;
+      }
+      .unhelpful-btn:hover {
+        background-color: #ffd4d4;
+      }
+      .helpful-count {
+        font-size: 0.9rem;
+        color: #555;
+      }
+
+      .user-menu img {
+        width: 35px; /* Reduce width */
+        height: 35px; /* Reduce height */
+        border-radius: 50%;
+        object-fit: cover;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    
+      /* Edit / Delete for Owner */
+      .review-actions {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .edit-btn, .delete-btn {
+        background-color: #eee;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .edit-btn:hover {
+        background-color: #f0f8ff;
+      }
+      .delete-btn:hover {
+        background-color: #ffd4d4;
+      }
+
+      /* Create Review Form */
+      .create-review {
+        margin-top: 30px;
+        border-top: 1px solid #ddd;
+        padding-top: 20px;
+      }
+      .create-review h2 {
+        margin: 0 0 15px;
+      }
+      .create-review form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .create-review label {
+        font-weight: bold;
+      }
+      .create-review input[type="text"],
+      .create-review textarea {
+        padding: 8px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .rating-input {
+        display: inline-block;
+        direction: rtl; 
+      }
+      .rating-input input[type="radio"] {
+        display: none; 
+      }
+      .rating-input label {
+        font-size: 1.5rem;
+        color: #ccc;
+        cursor: pointer;
+      }
+      
+      .rating-input input[type="radio"]:checked ~ label {
+        color: gold;
+      }
+      /* Hover effect on stars */
+      .rating-input label:hover,
+      .rating-input label:hover ~ label {
+        color: gold;
+      }
+      .create-review button {
+        width: 120px;
+        padding: 10px;
+        background: #0066cc;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      .create-review button:hover {
+        background: #0055aa;
+      }
+
+      .review-media {
+        margin-top: 5px;
+      }
+
+      .edit-textarea {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 5px;
+      }
+      .save-edit-btn, .cancel-edit-btn {
+        background-color: #eee;
+        border: none;
+        padding: 5px 10px;
+        margin-right: 5px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .save-edit-btn:hover {
+        background-color: #d4ffd4;
+      }
+      .cancel-edit-btn:hover {
+        background-color: #ffd4d4;
+      }
+
+      .review-system-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #fff;
+        border: 1px solid #ccc;
+      }
+
+      .review-system-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+      }
+      .review-system-header .title {
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+      .review-system-header .review-btn {
+        background-color: #0066cc;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .review-system-header .review-btn:hover {
+        background-color: #0055aa;
+      }
+
+      .review-summary {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+      }
+      .average-rating {
+        text-align: center;
+        margin-right: 40px;
+      }
+      .average-rating h2 {
+        font-size: 2rem;
+        margin: 0;
+      }
+      .average-rating p {
+        margin: 5px 0;
+        font-weight: bold;
+        color: #666;
+      }
+      .distribution {
+        flex: 1;
+      }
+      .distribution-row {
+        display: flex;
+        align-items: center;
+        margin: 5px 0;
+        font-size: 0.9rem;
+      }
+      .distribution-row span {
+        width: 50px;
+      }
+      .bar-bg {
+        width: 200px;
+        height: 10px;
+        background-color: #eee;
+        display: inline-block;
+        margin: 0 10px;
+        border-radius: 5px;
+        position: relative;
+      }
+      .bar-fill {
+        height: 100%;
+        background-color: #f90;
+        border-radius: 5px;
+      }
+
+      .filter {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+      }
+      .filter label {
+        margin-right: 10px;
+        font-weight: bold;
+      }
+      .filter select {
+        padding: 5px;
+        font-size: 1rem;
+      }
+
+      .review-list .review-item {
+        border-top: 1px solid #ddd;
+        padding: 15px 0;
+        position: relative;
+      }
+      .review-list .review-item:first-child {
+        border-top: none;
+      }
+      .review-item h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      .star-rating {
+        color: #f90;
+        margin: 5px 0;
+      }
+      .review-item p {
+        margin: 5px 0;
+      }
+      .review-item small {
+        color: #888;
+      }
+
+      /* Helpful / Unhelpful */
+      .helpful-actions {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .helpful-btn, .unhelpful-btn {
+        background-color: #eee;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .helpful-btn:hover {
+        background-color: #d4ffd4;
+      }
+      .unhelpful-btn:hover {
+        background-color: #ffd4d4;
+      }
+      .helpful-count {
+        font-size: 0.9rem;
+        color: #555;
+      }
+
+      /* Edit / Delete for Owner */
+      .review-actions {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .edit-btn, .delete-btn {
+        background-color: #eee;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .edit-btn:hover {
+        background-color: #f0f8ff;
+      }
+      .delete-btn:hover {
+        background-color: #ffd4d4;
+      }
+
+      /* Create Review Form */
+      .create-review {
+        margin-top: 30px;
+        border-top: 1px solid #ddd;
+        padding-top: 20px;
+      }
+      .create-review h2 {
+        margin: 0 0 15px;
+      }
+      .create-review form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .create-review label {
+        font-weight: bold;
+      }
+      .create-review input[type="text"],
+      .create-review textarea {
+        padding: 8px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .rating-input {
+        display: inline-block;
+        direction: rtl; 
+      }
+      .rating-input input[type="radio"] {
+        display: none; 
+      }
+      .rating-input label {
+        font-size: 1.5rem;
+        color: #ccc;
+        cursor: pointer;
+      }
+    
+      .rating-input input[type="radio"]:checked ~ label {
+        color: gold;
+      }
+    
+      .rating-input label:hover,
+      .rating-input label:hover ~ label {
+        color: gold;
+      }
+      .create-review button {
+        width: 120px;
+        padding: 10px;
+        background: #0066cc;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      .create-review button:hover {
+        background: #0055aa;
+      }
+
+      .review-media {
+        margin-top: 5px;
+      }
+
+      .edit-textarea {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 5px;
+      }
+      .save-edit-btn, .cancel-edit-btn {
+        background-color: #eee;
+        border: none;
+        padding: 5px 10px;
+        margin-right: 5px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .save-edit-btn:hover {
+        background-color: #d4ffd4;
+      }
+      .cancel-edit-btn:hover {
+        background-color: #ffd4d4;
+      }

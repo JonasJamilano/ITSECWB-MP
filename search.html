@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TasteCheck - Home</title>
+    <link rel="stylesheet" href="search.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>TasteCheck</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="Homepage.html">Home</a></li>
+                <li><a href="Branches.html">Cafe</a></li>
+                <li><a href="search.html">Search</a></li>
+                <li class="user-menu">
+                    <img id="userAvatar" src="user.jpg" alt="User Profile">
+                    <ul class="dropdown" id="user-dropdown">
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <section class="search-container">
+        <h2>Find Your Perfect Café Delight near you!</h2>
+
+        <!-- Filter by Rating -->
+    <div class="filter-rating">
+        <label for="rating">Filter by Rating:</label>
+        <select id="rating">
+            <option value="all">All Ratings</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars & Up</option>
+            <option value="3">3 Stars & Up</option>
+        </select>
+    </div>
+        
+    <div class="search-box">
+        <input type="text" id="search-establishment" placeholder="Search by name or description...">
+        <button onclick="performSearch()">Search</button>
+    </div>
+    </section>
+
+    <section class="branches-section" id="branches">
+        <h2>Featured Branches</h2>
+        <div class="branches-list">
+            <button class="branch" style="background-image: url('Manila.jpg');" onclick="window.location.href='Manila.html'">Manila</button>
+            <button class="branch" style="background-image: url('QC.jpg');" onclick="window.location.href='QuezonCity.html'">Quezon City</button>
+            <button class="branch" style="background-image: url('Rizal.jpg');" onclick="window.location.href='Rizal.html'">Rizal</button>
+            <button class="branch" style="background-image: url('Tagaytay.jpg');" onclick="window.location.href='Tagaytay.html'">Tagaytay</button>
+            <button class="branch" style="background-image: url('Davao.jpg');" onclick="window.location.href='Davao.html'">Davao</button>
+        </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Café Delight. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const userDropdown = document.getElementById("user-dropdown");
+            const userAvatar = document.getElementById("userAvatar");
+            const user = JSON.parse(localStorage.getItem("user"));
+
+            if (user) {
+                // Update avatar if user has uploaded one
+                if (user.avatar) {
+                    userAvatar.src = user.avatar;
+                } else {
+                    userAvatar.src = "user.jpg"; // Default avatar
+                }
+
+                // Populate dropdown menu
+                userDropdown.innerHTML = `
+                    <li><a href="user.html">My Profile</a></li>
+                    <li><a href="#" id="logout">Logout</a></li>
+                `;
+
+                // Logout function
+                document.getElementById("logout").addEventListener("click", function () {
+                    localStorage.removeItem("user");
+                    userAvatar.src = "user.jpg"; // Reset avatar
+                    window.location.href = "logout.html";
+                });
+            } else {
+                // Default dropdown for non-logged-in users
+                userDropdown.innerHTML = `
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="register.html">Sign Up</a></li>
+                `;
+            }
+        });
+    </script>
+
+    <script>
+        function performSearch() {
+            let searchQuery = document.getElementById("search-establishment").value.trim();
+            if (searchQuery) {
+                window.location.href = `result.html?query=${encodeURIComponent(searchQuery)}`;
+            }
+        }
+        </script>
+</body>
+</html>
