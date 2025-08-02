@@ -36,8 +36,35 @@ const userSchema = new mongoose.Schema({
     website: String,
     facebook: String,
     twitter: String,
-    avatar: String
+    avatar: String,
+    loginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date }
 });
+
+userSchema.methods.isLocked = function () {
+    return this.lockUntil && this.lockUntil > Date.now();
+};
+
+userSchema.methods.incrementLoginAttempts = async function () {
+    if (this.lockUntil && this.lockUntil < Date.now()) {
+        this.loginAttempts = 1;
+        this.lockUntil = undefined;
+    } else {
+        this.loginAttempts += 1;
+        if (this.loginAttempts >= 5) {
+            this.lockUntil = new Date(Date.now() + 5 * 60 * 1000); // Lock for 5 minutes
+        }
+    }
+    return this.save();
+};
+
+userSchema.methods.resetLoginAttempts = async function () {
+    this.loginAttempts = 0;
+    this.lockUntil = undefined;
+    return this.save();
+};
+
+
 const User = mongoose.model("User", userSchema);
 
 // Review Schema
@@ -112,11 +139,34 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ message: "❌ Invalid email or password." });
         }
 
-        // ✅ Compare password with hash
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: "❌ Invalid email or password." });
+        // Check if account is locked
+        if (user.isLocked()) {
+            return res.status(403).json({
+                message: "❌ Account temporarily locked due to multiple failed attempts. Try again in 5 minutes."
+            });
         }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            await user.incrementLoginAttempts();
+
+            const freshUser = await User.findOne({ email }); // Re-fetch to get updated value
+            const attemptsLeft = Math.max(5 - freshUser.loginAttempts, 0);
+
+            if (freshUser.isLocked()) {
+                return res.status(403).json({
+                    message: "❌ Account locked due to too many failed attempts. Try again in 5 minutes."
+                });
+            } else {
+                return res.status(401).json({
+                    message: `❌ Invalid email or password. ${attemptsLeft} attempt(s) left.`
+                });
+            }
+        }
+
+        // Successful login — reset attempts
+        await user.resetLoginAttempts();
 
         res.json({
             message: "✅ Login successful!",
@@ -128,11 +178,13 @@ app.post("/login", async (req, res) => {
                 avatar: user.avatar
             }
         });
+
     } catch (err) {
         console.error("❌ Error logging in:", err);
         res.status(500).json({ message: "Error logging in." });
     }
 });
+
 
 // Update Profile
 app.put("/update-profile/:id", async (req, res) => {
