@@ -12,7 +12,7 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname)));
 app.use("/uploads", express.static("uploads"));
 
 // ✅ Mount admin API routes
@@ -31,12 +31,10 @@ const userSchema = new mongoose.Schema({
     username: String,
     email: String,
     password: String,
+    passwordHistory: [String], // hashes of past passwords
     firstName: String,
     lastName: String,
     description: String,
-    website: String,
-    facebook: String,
-    twitter: String,
     avatar: String,
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date }
@@ -189,14 +187,14 @@ app.post("/login", async (req, res) => {
 // Password Reset Route
 app.post('/reset-password', async (req, res) => {
     const { email, newPassword } = req.body;
-    console.log("📩 Password reset attempt:", req.body); // <--- Add this
+    console.log("📩 Password reset attempt:", req.body);
   
     if (!email || !newPassword) {
       return res.status(400).json({ message: '❌ Email and new password are required.' });
     }
   
     try {
-      const user = await User.findOne({ email }); // ✅ Using Mongoose properly
+      const user = await User.findOne({ email });
   
       if (!user) {
         return res.status(404).json({ message: '❌ No user found with that email.' });
@@ -209,9 +207,34 @@ app.post('/reset-password', async (req, res) => {
         });
       }
   
+      // 🔁 Compare with current and previous passwords
+      const usedBefore = await Promise.any([
+        bcrypt.compare(newPassword, user.password),
+        ...(user.passwordHistory || []).map(oldHash => bcrypt.compare(newPassword, oldHash))
+      ]).catch(() => false);
+  
+      if (usedBefore) {
+        return res.status(400).json({
+          message: '⚠️ You’ve used this password before. Please choose a new one.'
+        });
+      }
+  
+      // ✅ Hash new password
       const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+      // 🧠 Add current password to history
+      const history = user.passwordHistory || [];
+      history.unshift(user.password); // Add current to top
+  
+      if (history.length > 5) {
+        history.pop(); // Keep only last 5
+      }
+  
+      // 💾 Save new password + history
       user.password = hashedPassword;
-      await user.save(); // ✅ Save the updated password
+      user.passwordHistory = history;
+  
+      await user.save();
   
       res.json({ message: '✅ Password successfully reset!' });
     } catch (error) {
