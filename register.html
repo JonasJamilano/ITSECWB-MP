@@ -38,7 +38,10 @@
 
             <!-- Password Input -->
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" required placeholder="Enter your password">
+            <div class="password-container">
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁️</button>
+            </div>
             <span id="passwordError" style="color:red; display:none;"></span>
 
             <!-- Avatar Upload -->
@@ -58,6 +61,19 @@
         <p>&copy; 2025 TasteCheck. All Rights Reserved.</p>
         <a href="login.html">Login</a> | <a href="#">Sign Up</a>
     </footer>
+
+    <script>
+        function togglePassword(fieldId, button) {
+            const input = document.getElementById(fieldId);
+            if (input.type === "password") {
+                input.type = "text";
+                button.textContent = "🙈"; // Change icon to hide
+            } else {
+                input.type = "password";
+                button.textContent = "👁️"; // Change icon back to show
+            }
+        }
+        </script>
 
     <script>
     document.getElementById("registerForm").addEventListener("submit", async function(event) {

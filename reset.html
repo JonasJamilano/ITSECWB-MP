@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reset Password - TasteCheck</title>
+  <link rel="stylesheet" href="reset.css">
+</head>
+<body>
+  <div class="reset-container">
+    <h2>Reset Your Password</h2>
+    <form id="resetForm">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+
+      <p class="warning">
+        ⚠️ Don’t use weak secret answers like “favorite color” or “birthday” — they’re too easy to guess.
+      </p>
+
+      <label for="newPassword">New Password:</label>
+      <input type="password" id="newPassword" name="newPassword" required>
+
+      <button type="submit">Reset Password</button>
+    </form>
+    <p id="message"></p>
+<button type="button" onclick="window.location.href='login.html'">← Back to Login</button>
+  </div>
+
+  <script>
+    document.getElementById('resetForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const newPassword = document.getElementById('newPassword').value;
+  
+      const messageEl = document.getElementById('message');
+      messageEl.innerText = '';
+      messageEl.style.color = 'black';
+  
+      try {
+        const response = await fetch('/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, newPassword })
+        });
+  
+        const result = await response.json();
+  
+        messageEl.innerText = result.message;
+  
+        if (response.ok) {
+          messageEl.style.color = 'green';
+          alert('🎉 Password changed successfully!');
+          document.getElementById('resetForm').reset();
+        } else {
+          messageEl.style.color = 'red';
+        }
+  
+      } catch (error) {
+        console.error('Fetch error:', error);
+        messageEl.innerText = '❌ Network error or server unavailable.';
+        messageEl.style.color = 'red';
+      }
+    });
+  </script>
+</body>
+</html>

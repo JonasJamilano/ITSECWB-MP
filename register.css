@@ -44,6 +44,26 @@ header nav ul li a {
     font-weight: 500;
 }
 
+.password-container {
+    position: relative;
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+}
+
 /* User Menu Dropdown */
 .user-menu {
     position: relative;

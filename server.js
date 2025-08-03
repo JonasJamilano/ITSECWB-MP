@@ -12,6 +12,7 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(express.static('public'));
 app.use("/uploads", express.static("uploads"));
 
 // ✅ Mount admin API routes
@@ -185,6 +186,39 @@ app.post("/login", async (req, res) => {
     }
 });
 
+// Password Reset Route
+app.post('/reset-password', async (req, res) => {
+    const { email, newPassword } = req.body;
+    console.log("📩 Password reset attempt:", req.body); // <--- Add this
+  
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: '❌ Email and new password are required.' });
+    }
+  
+    try {
+      const user = await User.findOne({ email }); // ✅ Using Mongoose properly
+  
+      if (!user) {
+        return res.status(404).json({ message: '❌ No user found with that email.' });
+      }
+  
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({
+          message: '❌ Password must include uppercase, lowercase, number, special character, and be at least 8 characters.'
+        });
+      }
+  
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save(); // ✅ Save the updated password
+  
+      res.json({ message: '✅ Password successfully reset!' });
+    } catch (error) {
+      console.error('❌ Error resetting password:', error);
+      res.status(500).json({ message: '❌ Server error while resetting password.' });
+    }
+  });
 
 // Update Profile
 app.put("/update-profile/:id", async (req, res) => {

@@ -35,13 +35,12 @@
             <label for="email">Email</label>
             <input type="email" id="email" name="email" placeholder="Enter your email" required>
 
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password" required>
-
-            <div class="rememberme">
-                <input type="checkbox" id="rememberme" name="rememberme"> 
-                <label for="rememberme">Remember Me</label>
-            </div>
+            <div class="password-container">
+            <input type="password" id="password" name="password" required placeholder="Enter password">
+                
+            <p style="text-align: right;">
+                <a href="reset.html">Forgot Password?</a>
+            </p>
 
             <button type="submit">Login</button>
         </form>
@@ -92,7 +91,6 @@ document.addEventListener("DOMContentLoaded", function () {
 </footer>
 
 <script>
-
 function logout() {
     fetch("http://localhost:3000/logout", { method: "POST" })
         .then(response => response.json())
