@@ -63,15 +63,6 @@
                     <label>Short Description</label>
                     <textarea placeholder="" id="descriptionField"></textarea>
 
-                    <label>Website</label>
-                    <input type="url" value="" id="websiteField">
-
-                    <label>Facebook</label>
-                    <input type="url" value="https://www.facebook.com/" id="facebookField">
-
-                    <label>Twitter</label>
-                    <input type="url" value="https://twitter.com/" id="twitterField">
-
                     <button id="saveProfileBtn">Save Profile</button>
                 </div>
 
@@ -117,9 +108,6 @@
             document.getElementById("firstNameField").value = user.firstName || "";
             document.getElementById("lastNameField").value = user.lastName || "";
             document.getElementById("descriptionField").value = user.description || "";
-            document.getElementById("websiteField").value = user.website || "";
-            document.getElementById("facebookField").value = user.facebook || "";
-            document.getElementById("twitterField").value = user.twitter || "";
 
             // If user has an avatar, display it
             if (user.avatar) {
@@ -135,9 +123,6 @@
                     description: document.getElementById("descriptionField").value,
                     firstName: document.getElementById("firstNameField").value,
                     lastName: document.getElementById("lastNameField").value,
-                    website: document.getElementById("websiteField").value,
-                    facebook: document.getElementById("facebookField").value,
-                    twitter: document.getElementById("twitterField").value
                 };
 
                 try {

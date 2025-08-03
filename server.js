@@ -32,6 +32,7 @@ const userSchema = new mongoose.Schema({
     email: String,
     password: String,
     passwordHistory: [String], // hashes of past passwords
+    passwordLastChanged: { type: Date, default: Date.now },
     firstName: String,
     lastName: String,
     description: String,
@@ -115,6 +116,7 @@ if (!complexityRegex.test(password)) {
             username,
             email,
             password: hashedPassword,
+            passwordLastChanged: new Date(), // ✅ Set time
             description,
             avatar
         });
@@ -187,7 +189,6 @@ app.post("/login", async (req, res) => {
 // Password Reset Route
 app.post('/reset-password', async (req, res) => {
     const { email, newPassword } = req.body;
-    console.log("📩 Password reset attempt:", req.body);
   
     if (!email || !newPassword) {
       return res.status(400).json({ message: '❌ Email and new password are required.' });
@@ -219,6 +220,25 @@ app.post('/reset-password', async (req, res) => {
         });
       }
   
+        // 🕒 Check if current password is less than 24 hours old
+        const now = new Date();
+        const lastChanged = user.passwordLastChanged || new Date(0);
+        const hoursSinceLastChange = (now - lastChanged) / (1000 * 60 * 60);
+
+        if (hoursSinceLastChange < 24) {
+            const remainingTime = 24 - hoursSinceLastChange;
+            const remainingHours = Math.floor(remainingTime);
+            const remainingMinutes = Math.round((remainingTime - remainingHours) * 60);
+            
+            let timeMessage = '';
+            if (remainingHours > 0) timeMessage += `${remainingHours} hour(s) `;
+            if (remainingMinutes > 0) timeMessage += `${remainingMinutes} minute(s)`;
+            
+            return res.status(403).json({
+                message: `⏳ You can’t change your password yet. Please wait ${timeMessage.trim()}.`
+            });
+        }
+        
       // ✅ Hash new password
       const hashedPassword = await bcrypt.hash(newPassword, 10);
   
@@ -230,9 +250,10 @@ app.post('/reset-password', async (req, res) => {
         history.pop(); // Keep only last 5
       }
   
-      // 💾 Save new password + history
+      // 💾 Save new password + updated fields
       user.password = hashedPassword;
       user.passwordHistory = history;
+      user.passwordLastChanged = new Date(); // ✅ Update timestamp
   
       await user.save();
   
@@ -252,9 +273,6 @@ app.put("/update-profile/:id", async (req, res) => {
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             description: req.body.description,
-            website: req.body.website,
-            facebook: req.body.facebook,
-            twitter: req.body.twitter
         };
 
         const updatedUser = await User.findByIdAndUpdate(req.params.id, updatedFields, { new: true });
