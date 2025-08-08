@@ -1,261 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile</title>
-    <link rel="stylesheet" href="editprofile.css">
-    <link rel="stylesheet" href="User.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #fde0bfda;
-            color: #4e4e4e;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Edit Profile</title>
+  <link rel="stylesheet" href="editprofile.css" />
+  <link rel="stylesheet" href="User.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #fde0bfda; color: #4e4e4e; }
+    #profileMessage { margin-top:10px; display:none; padding:8px; border-radius:4px; }
+  </style>
 </head>
 <body>
-    <header>
-        <div class="logo">
-            <h1>TasteCheck</h1>
+  <header>
+    <div class="logo"><h1>TasteCheck</h1></div>
+    <nav>
+      <ul>
+        <li><a href="Homepage.html">Home</a></li>
+        <li><a href="Branches.html">Branches</a></li>
+        <li class="user-menu">
+          <img id="userAvatar" src="User.jpg" alt="User Profile" />
+          <ul class="dropdown" id="user-dropdown"></ul>
+        </li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="login-box">
+    <div class="container">
+      <div class="sidebar">
+        <img id="profile-picture" src="User.jpg" alt="Profile Picture" width="150" />
+        <button id="changePictureBtn">Change Picture</button>
+        <input type="file" id="profilePicInput" accept="image/*" style="display:none" />
+        <button class="tab-button" onclick="openTab(event,'security')">Security</button>
+      </div>
+
+      <div class="tabs">
+        <div id="account" class="tab-content active">
+          <h2>Account Settings</h2>
+
+          <label>Email Address</label>
+          <input type="email" id="emailField" />
+
+          <label>Username</label>
+          <input type="text" id="usernameField" />
+
+          <label>First Name</label>
+          <input type="text" id="firstNameField" />
+
+          <label>Last Name</label>
+          <input type="text" id="lastNameField" />
+
+          <button id="saveProfileBtn">Save Profile</button>
+          <div id="profileMessage"></div>
         </div>
-        <nav>
-            <ul>
-                <li><a href="Homepage.html">Home</a></li>
-                <li><a href="Branches.html">Branches</a></li> 
-              
-                <li class="user-menu">
-                    <img id="userAvatar" src="User.jpg" alt="User Profile">
-                    <ul class="dropdown" id="user-dropdown">
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-    </header>
 
-    <div class="login-box">
-        <div class="container">
-            <div class="sidebar">
-                <img id="profile-picture" src="User.jpg" alt="Profile Picture" width="150">
-                <button id="changePictureBtn">Change Picture</button>
-                <input type="file" id="profilePicInput" accept="image/*" style="display: none;">        
-                <button class="tab-button" onclick="openTab(event, 'security')">Security</button>
-            </div>
-
-            <div class="tabs">
-                <div id="account" class="tab-content active">
-                    <h2>Account Settings</h2>
-
-                    <label>Email Address</label>
-                    <input type="email" value="" id="emailField">
-
-                    <label>Username</label>
-                    <input type="text" value="YourUsername" id="usernameField">
-
-                    <label>First Name</label>
-                    <input type="text" value="" id="firstNameField">
-
-                    <label>Last Name</label>
-                    <input type="text" value="" id="lastNameField">
-
-                    <label>Short Description</label>
-                    <textarea placeholder="" id="descriptionField"></textarea>
-
-                    <button id="saveProfileBtn">Save Profile</button>
-                </div>
-
-                <div id="security" class="tab-content">
-                    <h2>Security</h2>
-                    <label>Old Password</label>
-                    <input type="password" id="oldPassword" placeholder="Enter old password">
-
-                    <label>New Password</label>
-                    <input type="password" id="newPassword" placeholder="Enter new password">
-
-                    <label>Confirm New Password</label>
-                    <input type="password" id="confirmNewPassword" placeholder="Confirm new password">
-
-                    <button id="changePasswordBtn">Change Password</button>
-                </div>
-            </div>
+        <div id="security" class="tab-content">
+          <h2>Security</h2>
+          <label>Old Password</label>
+          <input type="password" id="oldPassword" placeholder="Enter old password" />
+          <label>New Password</label>
+          <input type="password" id="newPassword" placeholder="Enter new password" />
+          <label>Confirm New Password</label>
+          <input type="password" id="confirmNewPassword" placeholder="Confirm new password" />
+          <button id="changePasswordBtn">Change Password</button>
+          <div id="passwordMessage" style="margin-top:10px; display:none;"></div>
         </div>
+      </div>
     </div>
-    
-    <script>
-        function openTab(event, tabId) {
-            var tabcontent = document.getElementsByClassName("tab-content");
-            for (var i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].classList.remove("active");
-            }
-            document.getElementById(tabId).classList.add("active");
-        }
-        function changePicture() {
-            alert("Change Profile Picture functionality here.");
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const user = JSON.parse(localStorage.getItem("user"));
-            if (!user || !user._id) {
-                alert("User not found or not logged in. Redirecting to login.");
-                window.location.href = "login.html";
-                return;
-            }
-
-            document.getElementById("emailField").value = user.email || "";
-            document.getElementById("usernameField").value = user.username || "";
-            document.getElementById("firstNameField").value = user.firstName || "";
-            document.getElementById("lastNameField").value = user.lastName || "";
-            document.getElementById("descriptionField").value = user.description || "";
-
-            // If user has an avatar, display it
-            if (user.avatar) {
-                document.getElementById("profile-picture").src = "http://localhost:3000" + user.avatar;
-                document.getElementById("userAvatar").src = user.avatar;
-            }
-
-            document.getElementById("saveProfileBtn").addEventListener("click", async function () {
-                // Gather updated fields
-                const updatedData = {
-                    email: document.getElementById("emailField").value,
-                    username: document.getElementById("usernameField").value,
-                    description: document.getElementById("descriptionField").value,
-                    firstName: document.getElementById("firstNameField").value,
-                    lastName: document.getElementById("lastNameField").value,
-                };
-
-                try {
-                    const response = await fetch(`http://localhost:3000/update-profile/${user._id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(updatedData)
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        alert("✅ Profile updated successfully!");
-                        // Update localStorage user object
-                        localStorage.setItem("user", JSON.stringify(data.user));
-                    } else {
-                        alert("❌ Error: " + data.message);
-                    }
-                } catch (error) {
-                    console.error("❌ Error updating profile:", error);
-                    alert("An error occurred. Please try again.");
-                }
-            });
-
-            document.getElementById("changePasswordBtn").addEventListener("click", async function () {
-                const oldPassword = document.getElementById("oldPassword").value;
-                const newPassword = document.getElementById("newPassword").value;
-                const confirmNewPassword = document.getElementById("confirmNewPassword").value;
-
-                // 1) Check if new password & confirm match
-                if (newPassword !== confirmNewPassword) {
-                    alert("New password and confirm password do not match!");
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`http://localhost:3000/change-password/${user._id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ oldPassword, newPassword })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        alert("✅ Password changed successfully!");
-                        document.getElementById("oldPassword").value = "";
-                        document.getElementById("newPassword").value = "";
-                        document.getElementById("confirmNewPassword").value = "";
-                    } else {
-                        alert("❌ Error: " + data.message);
-                    }
-                } catch (error) {
-                    console.error("❌ Error changing password:", error);
-                    alert("An error occurred. Please try again.");
-                }
-            });
-        });
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const userDropdown = document.getElementById("user-dropdown");
-            const userAvatar = document.getElementById("userAvatar");
-            const user = JSON.parse(localStorage.getItem("user"));
-      
-            if (user) {
-                // Update avatar if user has uploaded one
-                if (user.avatar) {
-                    userAvatar.src = user.avatar;
-                } else {
-                    userAvatar.src = "user.jpg"; // Default avatar
-                }
-      
-                userDropdown.innerHTML = `
-                    <li><a href="user.html">My Profile</a></li>
-                    <li><a href="#" id="logout">Logout</a></li>
-                `;
-      
-                // Logout function
-                document.getElementById("logout").addEventListener("click", function () {
-                    localStorage.removeItem("user");
-                    userAvatar.src = "user.jpg"; // Reset avatar
-                    window.location.href = "logout.html";
-                });
-            } else {
-                userDropdown.innerHTML = `
-                    <li><a href="login.html">Login</a></li>
-                    <li><a href="register.html">Sign Up</a></li>
-                `;
-            }
-        });
-      </script>
+  </div>
 
 <script>
-    document.getElementById("changePictureBtn").addEventListener("click", function () {
-        document.getElementById("profilePicInput").click(); // Open file picker
-    });
-    
-    document.getElementById("profilePicInput").addEventListener("change", async function () {
-    if (this.files.length > 0) {
-        const formData = new FormData();
-        formData.append("avatar", this.files[0]);
+function openTab(event, tabId) {
+  const tabcontent = document.getElementsByClassName("tab-content");
+  for (let i=0;i<tabcontent.length;i++) tabcontent[i].classList.remove("active");
+  document.getElementById(tabId).classList.add("active");
+}
 
-        try {
-            const user = JSON.parse(localStorage.getItem("user")); // Get logged-in user
-            const response = await fetch(`http://localhost:3000/update-avatar/${user._id}`, {
-                method: "PUT",
-                body: formData
-            });
+document.addEventListener("DOMContentLoaded", function () {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const profileMessage = document.getElementById("profileMessage");
 
-            const data = await response.json();
-            if (response.ok) {
-                alert("✅ Profile picture updated!");
-                const newAvatarURL = `http://localhost:3000${data.avatar}`;
-                
-                document.getElementById("profile-picture").src = newAvatarURL;
-                document.getElementById("userAvatar").src = newAvatarURL;
+  if (!user || !user._id) {
+    alert("User not found or not logged in. Redirecting to login.");
+    window.location.href = "login.html";
+    return;
+  }
 
-                // Update user object in localStorage
-                user.avatar = newAvatarURL;
-                localStorage.setItem("user", JSON.stringify(user));
-            } else {
-                alert("❌ Error: " + data.message);
-            }
-        } catch (error) {
-            alert("An error occurred while uploading the picture.");
-            console.error(error);
-        }
+  // populate fields
+  document.getElementById("emailField").value = user.email || "";
+  document.getElementById("usernameField").value = user.username || "";
+  document.getElementById("firstNameField").value = user.firstName || "";
+  document.getElementById("lastNameField").value = user.lastName || "";
+
+  if (user.avatar) {
+    // if your avatar stored includes full URL, adjust accordingly
+    document.getElementById("profile-picture").src = user.avatar.startsWith("http") ? user.avatar : ("http://localhost:3000" + user.avatar);
+    document.getElementById("userAvatar").src = document.getElementById("profile-picture").src;
+  }
+
+  document.getElementById("saveProfileBtn").addEventListener("click", async function () {
+    const updatedData = {
+      email: document.getElementById("emailField").value.trim(),
+      username: document.getElementById("usernameField").value.trim(),
+      firstName: document.getElementById("firstNameField").value.trim(),
+      lastName: document.getElementById("lastNameField").value.trim()
+    };
+
+    // Clear previous message
+    profileMessage.style.display = "none";
+    profileMessage.textContent = "";
+
+    try {
+      const response = await fetch(`http://localhost:3000/update-profile/${user._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // update local storage and show success message
+        localStorage.setItem("user", JSON.stringify(data.user));
+        profileMessage.textContent = data.message || "✅ Profile updated successfully!";
+        profileMessage.style.color = "white";
+        profileMessage.style.background = "green";
+        profileMessage.style.display = "block";
+
+        setTimeout(() => profileMessage.style.display = "none", 3000);
+      } else {
+        profileMessage.textContent = data.message || "❌ Error updating profile.";
+        profileMessage.style.color = "white";
+        profileMessage.style.background = "red";
+        profileMessage.style.display = "block";
+      }
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      profileMessage.textContent = "An error occurred. Please try again.";
+      profileMessage.style.color = "white";
+      profileMessage.style.background = "red";
+      profileMessage.style.display = "block";
     }
-});
-    </script>
+  });
 
-    <footer>
-        <p>&copy; 2025 Café Delight. All Rights Reserved.</p>
-        <a href="#">Login</a> | <a href="#">Sign Up</a>
-    </footer>
+  // change picture flow (keeps using /update-avatar/:id)
+  document.getElementById("changePictureBtn").addEventListener("click", () => {
+    document.getElementById("profilePicInput").click();
+  });
+
+  document.getElementById("profilePicInput").addEventListener("change", async function () {
+    if (!this.files.length) return;
+    const formData = new FormData();
+    formData.append("avatar", this.files[0]);
+
+    try {
+      const response = await fetch(`http://localhost:3000/update-avatar/${user._id}`, {
+        method: "PUT",
+        body: formData
+      });
+      const data = await response.json();
+      if (response.ok) {
+        const newAvatarURL = data.avatar.startsWith("http") ? data.avatar : `http://localhost:3000${data.avatar}`;
+        document.getElementById("profile-picture").src = newAvatarURL;
+        document.getElementById("userAvatar").src = newAvatarURL;
+
+        // update stored user avatar
+        user.avatar = newAvatarURL;
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        profileMessage.textContent = data.message || "Error uploading avatar";
+        profileMessage.style.background = "red";
+        profileMessage.style.display = "block";
+      }
+    } catch (err) {
+      console.error(err);
+      profileMessage.textContent = "Error uploading avatar";
+      profileMessage.style.background = "red";
+      profileMessage.style.display = "block";
+    }
+  });
+
+   // Change password flow
+   document.getElementById("changePasswordBtn").addEventListener("click", async function () {
+    const oldPassword = document.getElementById("oldPassword").value.trim();
+    const newPassword = document.getElementById("newPassword").value.trim();
+    const confirmNewPassword = document.getElementById("confirmNewPassword").value.trim();
+    const passwordMessage = document.getElementById("passwordMessage");
+
+    passwordMessage.style.display = "none";
+    passwordMessage.textContent = "";
+
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      passwordMessage.textContent = "⚠️ Please fill in all password fields.";
+      passwordMessage.style.color = "white";
+      passwordMessage.style.background = "red";
+      passwordMessage.style.display = "block";
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      passwordMessage.textContent = "❌ New passwords do not match.";
+      passwordMessage.style.color = "white";
+      passwordMessage.style.background = "red";
+      passwordMessage.style.display = "block";
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/change-password/${user._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ oldPassword, newPassword })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        passwordMessage.textContent = data.message || "✅ Password changed successfully!";
+        passwordMessage.style.color = "white";
+        passwordMessage.style.background = "green";
+        passwordMessage.style.display = "block";
+
+        // Clear password fields
+        document.getElementById("oldPassword").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmNewPassword").value = "";
+      } else {
+        passwordMessage.textContent = data.message || "❌ Error changing password.";
+        passwordMessage.style.color = "white";
+        passwordMessage.style.background = "red";
+        passwordMessage.style.display = "block";
+      }
+    } catch (err) {
+      console.error("Error changing password:", err);
+      passwordMessage.textContent = "An error occurred. Please try again.";
+      passwordMessage.style.color = "white";
+      passwordMessage.style.background = "red";
+      passwordMessage.style.display = "block";
+    }
+  });
+});
+</script>
+
+<footer>
+  <p>&copy; 2025 Café Delight. All Rights Reserved.</p>
+</footer>
 </body>
 </html>

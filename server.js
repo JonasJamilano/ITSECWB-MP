@@ -38,7 +38,9 @@ const userSchema = new mongoose.Schema({
     description: String,
     avatar: String,
     loginAttempts: { type: Number, default: 0 },
-    lockUntil: { type: Date }
+    lockUntil: { type: Date },
+    lastLogin: { type: Date }, // Last successful login
+    lastAttempt: { type: Date } // Last attempt (success or fail)
 });
 
 userSchema.methods.isLocked = function () {
@@ -133,58 +135,59 @@ if (!complexityRegex.test(password)) {
 // Login Route
 app.post("/login", async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(401).json({ message: "❌ Invalid email or password." });
-        }
-
-        // Check if account is locked
-        if (user.isLocked()) {
-            return res.status(403).json({
-                message: "❌ Account temporarily locked due to multiple failed attempts. Try again in 5 minutes."
-            });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            await user.incrementLoginAttempts();
-
-            const freshUser = await User.findOne({ email }); // Re-fetch to get updated value
-            const attemptsLeft = Math.max(5 - freshUser.loginAttempts, 0);
-
-            if (freshUser.isLocked()) {
-                return res.status(403).json({
-                    message: "❌ Account locked due to too many failed attempts. Try again in 5 minutes."
-                });
-            } else {
-                return res.status(401).json({
-                    message: `❌ Invalid email or password. ${attemptsLeft} attempt(s) left.`
-                });
-            }
-        }
-
-        // Successful login — reset attempts
-        await user.resetLoginAttempts();
-
-        res.json({
-            message: "✅ Login successful!",
-            user: {
-                _id: user._id,
-                username: user.username,
-                email: user.email,
-                description: user.description,
-                avatar: user.avatar
-            }
+      const { email, password } = req.body;
+      const user = await User.findOne({ email });
+  
+      if (!user) {
+        return res.status(401).json({ message: "❌ Invalid email or password." });
+      }
+  
+      if (user.isLocked()) {
+        return res.status(403).json({
+          message: "❌ Account temporarily locked due to multiple failed attempts. Try again in 5 minutes."
         });
-
+      }
+  
+      user.lastAttempt = new Date(); // ✅ Track every attempt
+      const isMatch = await bcrypt.compare(password, user.password);
+  
+      if (!isMatch) {
+        await user.incrementLoginAttempts(); // Increments and saves
+        const attemptsLeft = Math.max(5 - user.loginAttempts, 0);
+  
+        if (user.isLocked()) {
+          return res.status(403).json({
+            message: "❌ Account locked due to too many failed attempts. Try again in 5 minutes."
+          });
+        } else {
+          return res.status(401).json({
+            message: `❌ Invalid email or password. ${attemptsLeft} attempt(s) left.`
+          });
+        }
+      }
+  
+            // Successful login
+        user.lastLogin = new Date();               // ✅ Set lastLogin BEFORE save
+        await user.resetLoginAttempts();           // ✅ Will save lastLogin too
+  
+        res.json({
+        message: "✅ Login successful!",
+        user: {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          description: user.description,
+          avatar: user.avatar,
+          lastLogin: user.lastLogin,
+          lastAttempt: user.lastAttempt
+        }
+      });
+  
     } catch (err) {
-        console.error("❌ Error logging in:", err);
-        res.status(500).json({ message: "Error logging in." });
+      console.error("❌ Error logging in:", err);
+      res.status(500).json({ message: "Error logging in." });
     }
-});
+  });
 
 // Password Reset Route
 app.post('/reset-password', async (req, res) => {
@@ -264,28 +267,117 @@ app.post('/reset-password', async (req, res) => {
     }
   });
 
-// Update Profile
-app.put("/update-profile/:id", async (req, res) => {
-    try {
-        const updatedFields = {
-            email: req.body.email,
-            username: req.body.username,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            description: req.body.description,
-        };
+// Change password (logged-in user) - verify old password first
+app.put("/change-password/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { oldPassword, newPassword } = req.body;
 
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, updatedFields, { new: true });
-
-        if (!updatedUser) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        res.json({ message: "✅ Profile updated successfully!", user: updatedUser });
-    } catch (error) {
-        console.error("❌ Error updating profile:", error);
-        res.status(500).json({ message: "Server error" });
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Old and new passwords are required." });
     }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // 🕒 Check if password is less than 24 hours old
+    const now = new Date();
+    const lastChanged = user.passwordLastChanged || new Date(0);
+    const hoursSinceLastChange = (now - lastChanged) / (1000 * 60 * 60);
+
+    if (hoursSinceLastChange < 24) {
+      const remainingMs = (24 - hoursSinceLastChange) * 60 * 60 * 1000;
+      const remainingHours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const remainingMinutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+
+      return res.status(403).json({
+        success: false,
+        message: `⏳ You can’t change your password yet. Please wait ${remainingHours} hour(s) and ${remainingMinutes} minute(s).`
+      });
+    }
+
+    // Verify old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Old password is incorrect." });
+    }
+
+    // Validate new password complexity
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters and include uppercase, lowercase, a number and a special character."
+      });
+    }
+
+    // Prevent reuse of current/recent passwords
+    const usedBefore = await Promise.any([
+      bcrypt.compare(newPassword, user.password),
+      ...(user.passwordHistory || []).map(h => bcrypt.compare(newPassword, h))
+    ]).catch(() => false);
+
+    if (usedBefore) {
+      return res.status(400).json({ success: false, message: "You have used this password before. Choose a new one." });
+    }
+
+    // Push current password into history, keep last 5
+    const history = user.passwordHistory || [];
+    history.unshift(user.password);
+    if (history.length > 5) history.length = 5;
+
+    // Hash & set new password
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    user.passwordHistory = history;
+    user.passwordLastChanged = new Date();
+
+    await user.save();
+
+    return res.json({ success: true, message: "✅ Password changed successfully!" });
+  } catch (err) {
+    console.error("❌ Error in /change-password:", err);
+    return res.status(500).json({ success: false, message: "Server error while changing password." });
+  }
+});
+
+// ---------- FIXED: Update Profile (PUT /update-profile/:id) ----------
+app.put("/update-profile/:id", async (req, res) => {
+  try {
+    const { email, username, firstName, lastName, description } = req.body;
+
+    const updatedFields = {};
+    if (email) updatedFields.email = email;
+    if (username) updatedFields.username = username;
+    if (typeof firstName !== "undefined") updatedFields.firstName = firstName;
+    if (typeof lastName !== "undefined") updatedFields.lastName = lastName;
+    if (typeof description !== "undefined") updatedFields.description = description;
+
+    // findByIdAndUpdate returns the updated doc with { new: true }
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updatedFields, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // don't send password fields back
+    const userResponse = {
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      description: updatedUser.description,
+      avatar: updatedUser.avatar
+    };
+
+    res.json({ success: true, message: "✅ Profile updated successfully!", user: userResponse });
+  } catch (error) {
+    console.error("❌ Error updating profile:", error);
+    res.status(500).json({ success: false, message: "❌ Error updating profile." });
+  }
 });
 
 // Update Avatar
