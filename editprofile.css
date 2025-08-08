@@ -5,6 +5,25 @@
     box-sizing: border-box;
 }
 
+.password-wrapper {
+    position: relative;
+  }
+  
+  .password-wrapper input {
+    width: 100%;
+    padding-right: 30px; /* space for eye icon */
+  }
+  
+  .toggle-password {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.2em;
+    user-select: none;
+  }
+
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #fde0bfda;
