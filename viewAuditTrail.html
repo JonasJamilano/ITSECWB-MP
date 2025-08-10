@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Audit Trail</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <h2>Audit Trail</h2>
+  <button onclick="fetchAudit()">Refresh Logs</button>
+  <pre id="auditLogs" style="white-space: pre-wrap; background:#eee; padding:10px; max-height: 400px; overflow-y: scroll;"></pre>
+
+  <script>
+    async function fetchAudit() {
+      const res = await fetch('/admin/audit-trail');
+      const logs = await res.json();
+      const pre = document.getElementById('auditLogs');
+      if (res.ok) {
+        pre.textContent = logs.map(log => JSON.stringify(log)).join('\n\n');
+      } else {
+        pre.textContent = "Failed to load audit logs";
+      }
+    }
+
+    // Auto fetch on load
+    fetchAudit();
+  </script>
+</body>
+</html>
