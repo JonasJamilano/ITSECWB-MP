@@ -5,7 +5,6 @@ const multer = require("multer");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const Audit = require("./Audit");
-const adminUser = require('./adminUser');
 
 const app = express();
 const PORT = 3000;
@@ -14,14 +13,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-// Serve static files from current directory and uploads folder
+// Serve static files from current directory (HTML, CSS, JS, images, uploads all here)
 app.use(express.static(__dirname));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Serve Homepage.html at root
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "Homepage.html"));
+// Multer setup for uploads - save files to current directory
+const storage = multer.diskStorage({
+    destination: __dirname,
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "-" + file.originalname);
+    }
 });
+const upload = multer({ storage });
 
 // MongoDB Connection
 mongoose.connect("mongodb://localhost:27017/webcafe", {
@@ -29,9 +31,9 @@ mongoose.connect("mongodb://localhost:27017/webcafe", {
     useUnifiedTopology: true
 })
 .then(() => console.log("✅ Connected to MongoDB"))
-.catch(err => console.log("❌ MongoDB Connection Error:", err));
+.catch(err => console.error("❌ MongoDB Connection Error:", err));
 
-// User Schema with role field added
+// User schema/model with all fields
 const userSchema = new mongoose.Schema({
     username: String,
     email: String,
@@ -43,9 +45,9 @@ const userSchema = new mongoose.Schema({
     description: String,
     avatar: String,
     loginAttempts: { type: Number, default: 0 },
-    lockUntil: { type: Date },
-    lastLogin: { type: Date },
-    lastAttempt: { type: Date },
+    lockUntil: Date,
+    lastLogin: Date,
+    lastAttempt: Date,
     role: { type: String, default: "customer" }
 });
 
@@ -60,7 +62,7 @@ userSchema.methods.incrementLoginAttempts = async function () {
     } else {
         this.loginAttempts += 1;
         if (this.loginAttempts >= 5) {
-            this.lockUntil = new Date(Date.now() + 5 * 60 * 1000);
+            this.lockUntil = new Date(Date.now() + 5 * 60 * 1000); // lock for 5 minutes
         }
     }
     return this.save();
@@ -74,7 +76,7 @@ userSchema.methods.resetLoginAttempts = async function () {
 
 const User = mongoose.model("User", userSchema);
 
-// Review Schema
+// Review schema/model
 const reviewSchema = new mongoose.Schema({
     userId: String,
     username: String,
@@ -85,30 +87,27 @@ const reviewSchema = new mongoose.Schema({
 });
 const Review = mongoose.model("Review", reviewSchema);
 
-// Multer Setup for File Uploads
-const storage = multer.diskStorage({
-    destination: path.join(__dirname, "uploads"),
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + "-" + file.originalname);
-    }
-});
-const upload = multer({ storage });
+// ======================== ROUTES ========================
 
-// Register Route for regular users
+// Homepage route (serve Homepage.html)
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "Homepage.html"));
+});
+
+// Registration route (user)
 app.post("/register", upload.single("avatar"), async (req, res) => {
     try {
         const { username, email, password, description } = req.body;
-        const avatar = req.file ? "/uploads/" + req.file.filename : null;
+        const avatar = req.file ? req.file.filename : null;
 
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
+        if (await User.findOne({ email })) {
             return res.status(400).json({ message: "❌ Email already registered." });
         }
 
-        const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
         if (!complexityRegex.test(password)) {
             return res.status(400).json({
-                message: "❌ Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character."
+                message: "❌ Password must be at least 8 characters and include uppercase, lowercase, number, and special character."
             });
         }
 
@@ -126,19 +125,18 @@ app.post("/register", upload.single("avatar"), async (req, res) => {
 
         await newUser.save();
 
+        // Audit log
         try {
             await Audit.create({
                 userId: newUser._id,
                 username: newUser.username,
                 action: "User Registered",
-                details: `User ${newUser.username} registered with role ${newUser.role}`
+                details: `User ${newUser.username} registered with role customer`
             });
-            console.log(`Audit log created for user registration: ${newUser.username}`);
         } catch (auditErr) {
             console.error("Audit log creation failed:", auditErr);
         }
 
-        console.log(`User registered successfully: ${username}`);
         res.json({ message: "✅ User registered successfully!" });
     } catch (err) {
         console.error("❌ Error in registration:", err);
@@ -146,14 +144,10 @@ app.post("/register", upload.single("avatar"), async (req, res) => {
     }
 });
 
-
-
-// New Admin Register Route with role selection
+// Admin register route (role selection)
 app.post("/admin/register", multer().none(), async (req, res) => {
     try {
         const { username, email, password, role } = req.body;
-
-        console.log("Admin registration attempt:", { username, email, role });
 
         if (!username || !email || !password || !role) {
             return res.status(400).json({ message: "All fields are required." });
@@ -164,15 +158,14 @@ app.post("/admin/register", multer().none(), async (req, res) => {
             return res.status(400).json({ message: "Invalid role." });
         }
 
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
+        if (await User.findOne({ email })) {
             return res.status(400).json({ message: "Email already registered." });
         }
 
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
         if (!regex.test(password)) {
             return res.status(400).json({
-                message: "Password must be at least 8 chars, with uppercase, lowercase, number and special char.",
+                message: "Password must be at least 8 characters with uppercase, lowercase, number and special character."
             });
         }
 
@@ -183,11 +176,12 @@ app.post("/admin/register", multer().none(), async (req, res) => {
             email,
             password: hashed,
             role,
-            passwordLastChanged: new Date(),
+            passwordLastChanged: new Date()
         });
 
         await newUser.save();
 
+        // Audit log
         try {
             await Audit.create({
                 userId: newUser._id,
@@ -195,12 +189,10 @@ app.post("/admin/register", multer().none(), async (req, res) => {
                 action: "Admin Registered",
                 details: `Admin ${newUser.username} registered with role ${newUser.role}`
             });
-            console.log("Audit log created for new admin registration.");
         } catch (auditErr) {
             console.error("Audit log creation failed:", auditErr);
         }
 
-        console.log(`Admin registered successfully: ${username}`);
         res.json({ message: "✅ Admin registered successfully. Please login." });
     } catch (error) {
         console.error("❌ Error in admin register:", error);
@@ -208,7 +200,7 @@ app.post("/admin/register", multer().none(), async (req, res) => {
     }
 });
 
-// Login Route for users
+// Login route for users
 app.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -229,13 +221,13 @@ app.post("/login", async (req, res) => {
 
         if (!isMatch) {
             await user.incrementLoginAttempts();
-            const attemptsLeft = Math.max(5 - user.loginAttempts, 0);
 
             if (user.isLocked()) {
                 return res.status(403).json({
                     message: "❌ Account locked due to too many failed attempts. Try again in 5 minutes."
                 });
             } else {
+                const attemptsLeft = Math.max(5 - user.loginAttempts, 0);
                 return res.status(401).json({
                     message: `❌ Invalid email or password. ${attemptsLeft} attempt(s) left.`
                 });
@@ -245,6 +237,7 @@ app.post("/login", async (req, res) => {
         user.lastLogin = new Date();
         await user.resetLoginAttempts();
 
+        // Audit log
         try {
             await Audit.create({
                 userId: user._id,
@@ -252,7 +245,6 @@ app.post("/login", async (req, res) => {
                 action: "User Logged In",
                 details: `User ${user.username} logged in`
             });
-            console.log(`Audit log created for user login: ${user.username}`);
         } catch (auditErr) {
             console.error("Audit log creation failed:", auditErr);
         }
@@ -276,27 +268,91 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// Password Reset Route (unchanged placeholder)
+// Admin login route
+app.post("/admin/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const admin = await User.findOne({ email, role: "admin" });
+
+        if (!admin) {
+            return res.status(401).json({ message: "❌ Invalid admin credentials." });
+        }
+
+        if (admin.isLocked()) {
+            return res.status(403).json({
+                message: "❌ Account temporarily locked due to multiple failed attempts. Try again in 5 minutes."
+            });
+        }
+
+        admin.lastAttempt = new Date();
+        const isMatch = await bcrypt.compare(password, admin.password);
+
+        if (!isMatch) {
+            await admin.incrementLoginAttempts();
+
+            if (admin.isLocked()) {
+                return res.status(403).json({
+                    message: "❌ Account locked due to too many failed attempts. Try again in 5 minutes."
+                });
+            } else {
+                const attemptsLeft = Math.max(5 - admin.loginAttempts, 0);
+                return res.status(401).json({
+                    message: `❌ Invalid admin credentials. ${attemptsLeft} attempt(s) left.`
+                });
+            }
+        }
+
+        admin.lastLogin = new Date();
+        await admin.resetLoginAttempts();
+
+        // Audit log
+        try {
+            await Audit.create({
+                userId: admin._id,
+                username: admin.username,
+                action: "Admin Logged In",
+                details: `Admin ${admin.username} logged in`
+            });
+        } catch (auditErr) {
+            console.error("Audit log creation failed:", auditErr);
+        }
+
+        res.json({
+            message: "✅ Admin login successful!",
+            admin: {
+                _id: admin._id,
+                username: admin.username,
+                email: admin.email,
+                role: admin.role
+            }
+        });
+    } catch (err) {
+        console.error("❌ Error logging in admin:", err);
+        res.status(500).json({ message: "Error logging in admin." });
+    }
+});
+
+// Placeholder password reset route
 app.post('/reset-password', async (req, res) => {
     res.status(501).json({ message: "Password reset route not implemented." });
 });
 
-// Change password route (logged-in user) (placeholder)
+// Placeholder change password route
 app.put("/change-password/:id", async (req, res) => {
     res.status(501).json({ message: "Change password route not implemented." });
 });
 
-// Update Profile (placeholder)
+// Placeholder update profile route
 app.put("/update-profile/:id", async (req, res) => {
     res.status(501).json({ message: "Update profile route not implemented." });
 });
 
-// Update Avatar (placeholder)
+// Placeholder update avatar route
 app.put("/update-avatar/:id", upload.single("avatar"), async (req, res) => {
     res.status(501).json({ message: "Update avatar route not implemented." });
 });
 
-// Reviews routes (basic examples)
+// Reviews routes
 app.get("/reviews", async (req, res) => {
     try {
         const reviews = await Review.find();
@@ -337,72 +393,14 @@ app.delete("/reviews/:id", async (req, res) => {
     }
 });
 
-// Admin Login Route
-app.post("/admin/login", async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const admin = await User.findOne({ email, role: "admin" });
+// Middleware to check admin auth - placeholder
+const adminCheck = (req, res, next) => {
+    // TODO: Replace with real auth
+    next();
+};
 
-        if (!admin) {
-            return res.status(401).json({ message: "❌ Invalid admin credentials." });
-        }
-
-        if (admin.isLocked()) {
-            return res.status(403).json({
-                message: "❌ Account temporarily locked due to multiple failed attempts. Try again in 5 minutes."
-            });
-        }
-
-        admin.lastAttempt = new Date();
-        const isMatch = await bcrypt.compare(password, admin.password);
-
-        if (!isMatch) {
-            await admin.incrementLoginAttempts();
-            const attemptsLeft = Math.max(5 - admin.loginAttempts, 0);
-
-            if (admin.isLocked()) {
-                return res.status(403).json({
-                    message: "❌ Account locked due to too many failed attempts. Try again in 5 minutes."
-                });
-            } else {
-                return res.status(401).json({
-                    message: `❌ Invalid admin credentials. ${attemptsLeft} attempt(s) left.`
-                });
-            }
-        }
-
-        admin.lastLogin = new Date();
-        await admin.resetLoginAttempts();
-
-        try {
-            await Audit.create({
-                userId: admin._id,
-                username: admin.username,
-                action: "Admin Logged In",
-                details: `Admin ${admin.username} logged in`
-            });
-            console.log(`Audit log created for admin login: ${admin.username}`);
-        } catch (auditErr) {
-            console.error("Audit log creation failed:", auditErr);
-        }
-
-        res.json({
-            message: "✅ Admin login successful!",
-            admin: {
-                _id: admin._id,
-                username: admin.username,
-                email: admin.email,
-                role: admin.role
-            }
-        });
-    } catch (err) {
-        console.error("❌ Error logging in admin:", err);
-        res.status(500).json({ message: "Error logging in admin." });
-    }
-});
-
-// Admin can fetch all users (excluding passwords)
-app.get("/admin/users", async (req, res) => {
+// Admin get all users (merged Manage Accounts & Assign Roles) at /webcafe/users
+app.get("/webcafe/users", adminCheck, async (req, res) => {
     try {
         const users = await User.find({}, "-password -passwordHistory");
         res.json(users);
@@ -411,78 +409,65 @@ app.get("/admin/users", async (req, res) => {
     }
 });
 
-// Admin can delete user by id
-app.delete("/admin/users/:id", async (req, res) => {
-    try {
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
-
-        if (!deletedUser) {
-            return res.status(404).json({ message: "User not found." });
-        }
-
-        try {
-            await Audit.create({
-                userId: deletedUser._id,
-                username: deletedUser.username,
-                action: "User Deleted",
-                details: `User ${deletedUser.username} deleted by admin`
-            });
-            console.log(`Audit log created for deleted user: ${deletedUser.username}`);
-        } catch (auditErr) {
-            console.error("Audit log creation failed:", auditErr);
-        }
-
-        res.json({ message: "User deleted successfully." });
-    } catch (err) {
-        res.status(500).json({ message: "Error deleting user." });
-    }
-});
-
-// Admin can assign roles to user
-app.put("/admin/users/:id/role", async (req, res) => {
+// Admin update user role
+app.put("/webcafe/users/:id/role", adminCheck, async (req, res) => {
     try {
         const { role } = req.body;
         const validRoles = ["customer", "admin", "roleA"];
-
         if (!validRoles.includes(role)) {
             return res.status(400).json({ message: "Invalid role." });
         }
-
         const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ message: "User not found." });
-        }
+        if (!user) return res.status(404).json({ message: "User not found." });
 
         user.role = role;
         await user.save();
 
-        try {
-            await Audit.create({
-                userId: user._id,
-                username: user.username,
-                action: "Role Changed",
-                details: `User ${user.username} role changed to ${role}`
-            });
-            console.log(`Audit log created for role change: ${user.username} -> ${role}`);
-        } catch (auditErr) {
-            console.error("Audit log creation failed:", auditErr);
-        }
+        // Audit log for role change
+        await Audit.create({
+            userId: user._id,
+            username: user.username,
+            action: "Role Changed",
+            details: `User ${user.username} role changed to ${role}`
+        });
 
-        res.json({ message: `User role updated to ${role}` });
+        res.json({ message: "User role updated." });
     } catch (err) {
         res.status(500).json({ message: "Error updating user role." });
     }
 });
 
-// Audit Trail - Get all audit logs
-app.get("/admin/audit", async (req, res) => {
+// Admin delete user account
+app.delete("/webcafe/users/:id", adminCheck, async (req, res) => {
     try {
-        const audits = await Audit.find().sort({ timestamp: -1 });
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) return res.status(404).json({ message: "User not found." });
+
+        // Audit log user deletion
+        await Audit.create({
+            userId: user._id,
+            username: user.username,
+            action: "User Deleted",
+            details: `User ${user.username} deleted`
+        });
+
+        res.json({ message: "User deleted." });
+    } catch (err) {
+        res.status(500).json({ message: "Error deleting user." });
+    }
+});
+
+// Audit trail endpoint at /webcafe/audit
+app.get("/webcafe/audit", async (req, res) => {
+    try {
+        const audits = await Audit.find().sort({ createdAt: -1 });
         res.json(audits);
     } catch (err) {
         res.status(500).json({ message: "Error fetching audit logs." });
     }
 });
 
-// Start Server
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// Start the server
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+});

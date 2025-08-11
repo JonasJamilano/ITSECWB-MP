@@ -12,11 +12,11 @@
 
   <script>
     async function fetchAudit() {
-      const res = await fetch('/admin/audit-trail');
+      const res = await fetch('/webcafe/audit');
       const logs = await res.json();
       const pre = document.getElementById('auditLogs');
       if (res.ok) {
-        pre.textContent = logs.map(log => JSON.stringify(log)).join('\n\n');
+        pre.textContent = logs.map(log => JSON.stringify(log, null, 2)).join('\n\n');
       } else {
         pre.textContent = "Failed to load audit logs";
       }

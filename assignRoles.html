@@ -1,65 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Assign Roles</title>
-  <link rel="stylesheet" href="admin.css" />
-  <style>
-    textarea#usernames {
-      width: 100%;
-      height: 120px;
-      padding: 10px;
-      font-size: 16px;
-      resize: vertical;
-    }
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Manage Accounts & Assign Roles</title>
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-  <h1>Assign Roles</h1>
-  
-  <label for="usernames">Enter Username(s) or Name(s):</label><br />
-  <textarea id="usernames" placeholder="Enter one or more usernames or names, separated by commas or new lines"></textarea><br />
-  
-  <label for="role">Select Role:</label><br />
-  <select id="role">
-    <option value="admin">Admin</option>
-    <option value="manager">Manager</option>
-    <option value="customer">Customer</option>
-  </select><br />
-  
-  <button onclick="assignRole()">Assign Role</button>
+    <h1>Manage Accounts & Assign Roles</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Current Role</th>
+                <th>Change Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="usersTableBody"></tbody>
+    </table>
 
-  <script>
-    async function assignRole() {
-      const usernamesRaw = document.getElementById('usernames').value.trim();
-      if (!usernamesRaw) {
-        alert("Please enter at least one username or name.");
-        return;
-      }
+    <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Note: for now no real auth token required because backend adminCheck allows all.
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            alert("You must log in as an admin first.");
+            window.location.href = "adminlogin.html";
+            return;
+        }
 
-      // Split by commas or new lines, then trim each username
-      const usernames = usernamesRaw.split(/[\n,]+/).map(u => u.trim()).filter(Boolean);
-      const role = document.getElementById('role').value;
+        try {
+            const res = await fetch("/webcafe/users", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
 
-      try {
-        const res = await fetch('/admin/assign-role', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usernames, role })
+            if (!res.ok) throw new Error("Failed to load users");
+            const users = await res.json();
+
+            const tableBody = document.getElementById("usersTableBody");
+            tableBody.innerHTML = "";
+
+            users.forEach(user => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.role}</td>
+                    <td>
+                        <select id="role-${user._id}">
+                            <option value="admin" ${user.role === "admin" ? "selected" : ""}>Admin</option>
+                            <option value="roleA" ${user.role === "roleA" ? "selected" : ""}>Role A</option>
+                            <option value="customer" ${user.role === "customer" ? "selected" : ""}>Customer</option>
+                        </select>
+                        <button onclick="changeRole('${user._id}')">Change Role</button>
+                    </td>
+                    <td>
+                        <button onclick="deleteAccount('${user._id}')">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (err) {
+            alert(err.message);
+        }
+    });
+
+    async function changeRole(userId) {
+        const token = localStorage.getItem("authToken");
+        const newRole = document.getElementById(`role-${userId}`).value;
+
+        const res = await fetch(`/webcafe/users/${userId}/role`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ role: newRole })
         });
-        const data = await res.json();
-        alert(data.message);
-      } catch (err) {
-        alert("Error assigning roles.");
-        console.error(err);
-      }
+
+        if (res.ok) {
+            alert("Role updated successfully");
+            location.reload();
+        } else {
+            alert("Failed to update role");
+        }
     }
-  </script>
+
+    async function deleteAccount(userId) {
+        const token = localStorage.getItem("authToken");
+
+        const res = await fetch(`/webcafe/users/${userId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            alert("Account deleted successfully");
+            location.reload();
+        } else {
+            alert("Failed to delete account");
+        }
+    }
+    </script>
 </body>
 </html>

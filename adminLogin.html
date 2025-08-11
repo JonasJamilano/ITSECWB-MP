@@ -18,30 +18,46 @@
       <p id="message"></p>
     </div>
   </div>
+
   <script>
     document.getElementById('loginForm').addEventListener('submit', async e => {
       e.preventDefault();
+
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
 
-      const res = await fetch('/admin/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
+      try {
+        const res = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
 
-      const msg = document.getElementById('message');
-      if (res.ok) {
-        msg.style.color = 'green';
-        msg.innerText = "Login successful!";
-        // You can save token in localStorage here if backend returns it:
-        // localStorage.setItem('authToken', data.token);
-        // Redirect to admin.html/dashboard after login
-        window.location.href = "admin.html";
-      } else {
-        msg.style.color = 'red';
-        msg.innerText = data.message || 'Login failed';
+        const data = await res.json();
+        const msg = document.getElementById('message');
+
+        if (res.ok) {
+          msg.style.color = 'green';
+          msg.innerText = "Login successful! Redirecting...";
+
+          // ✅ Save token & user ID for other pages
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('adminId', data.adminId);
+
+          // Redirect to admin panel
+          setTimeout(() => {
+            window.location.href = "admin.html";
+          }, 1000);
+
+        } else {
+          msg.style.color = 'red';
+          msg.innerText = data.message || 'Login failed';
+        }
+
+      } catch (error) {
+        console.error("Login error:", error);
+        document.getElementById('message').style.color = 'red';
+        document.getElementById('message').innerText = "Server error. Please try again.";
       }
     });
   </script>
