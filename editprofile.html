@@ -22,6 +22,7 @@
         <li class="user-menu">
           <img id="userAvatar" src="User.jpg" alt="User Profile" />
           <ul class="dropdown" id="user-dropdown"></ul>
+          <li id="admin-link" style="display:none;"><a href="admin.html">Admin Dashboard</a></li>
         </li>
       </ul>
     </nav>
@@ -282,5 +283,19 @@ document.addEventListener("DOMContentLoaded", function () {
 <footer>
   <p>&copy; 2025 Café Delight. All Rights Reserved.</p>
 </footer>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const dropdown = document.querySelector(".dropdown");
+    const user = JSON.parse(localStorage.getItem("user"));
+  
+    // Create Admin Dashboard link only if user is manager or admin
+    if (user && (user.role === "admin" || user.role === "manager")) {
+      const li = document.createElement("li");
+      li.innerHTML = `<a href="admin.html">Admin Dashboard</a>`;
+      dropdown.appendChild(li);
+    }
+  });
+  </script>
 </body>
 </html>

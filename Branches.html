@@ -22,6 +22,7 @@
                         <img id="userAvatar" src="user.jpg" alt="User Profile">
                     </a>
                     <ul class="dropdown" id="user-dropdown"></ul>
+                    <li id="admin-link" style="display:none;"><a href="admin.html">Admin Dashboard</a></li>
                 </li>
             </ul>
         </nav>
@@ -121,6 +122,20 @@
                 `;
             }
         });
+    </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const dropdown = document.querySelector(".dropdown");
+      const user = JSON.parse(localStorage.getItem("user"));
+    
+      // Create Admin Dashboard link only if user is manager or admin
+      if (user && (user.role === "admin" || user.role === "manager")) {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="admin.html">Admin Dashboard</a>`;
+        dropdown.appendChild(li);
+      }
+    });
     </script>
     
 
