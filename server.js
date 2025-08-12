@@ -99,32 +99,32 @@ app.post('/reset-password', async (req, res) => {
     const { email, newPassword } = req.body;
   
     if (!email || !newPassword) {
-      return res.status(400).json({ message: '❌ Email and new password are required.' });
+      return res.status(400).json({ success: false, message: '❌ Email and new password are required.' });
     }
   
     try {
       const user = await User.findOne({ email });
   
       if (!user) {
-        return res.status(404).json({ message: '❌ No user found with that email.' });
+        return res.status(404).json({ success: false, message: '❌ No user found with that email.' });
       }
   
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
       if (!passwordRegex.test(newPassword)) {
         return res.status(400).json({
+          success: false,
           message: '❌ Password must include uppercase, lowercase, number, special character, and be at least 8 characters.'
         });
       }
   
+      // Prevent reuse of current/recent passwords
       const usedBefore = await Promise.any([
         bcrypt.compare(newPassword, user.password),
-        ...(user.passwordHistory || []).map(oldHash => bcrypt.compare(newPassword, oldHash))
+        ...(user.passwordHistory || []).map(h => bcrypt.compare(newPassword, h))
       ]).catch(() => false);
   
       if (usedBefore) {
-        return res.status(400).json({
-          message: '⚠️ You’ve used this password before. Please choose a new one.'
-        });
+        return res.status(400).json({ success: false, message: "You have used this password before. Choose a new one." });
       }
   
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -139,10 +139,10 @@ app.post('/reset-password', async (req, res) => {
   
       await user.save();
   
-      res.json({ message: '✅ Password successfully reset!' });
+      return res.json({ success: true, message: '✅ Password successfully reset!' });
     } catch (error) {
       console.error('❌ Error resetting password:', error);
-      res.status(500).json({ message: '❌ Server error while resetting password.' });
+      return res.status(500).json({ success: false, message: '❌ Server error while resetting password.' });
     }
   });
 
