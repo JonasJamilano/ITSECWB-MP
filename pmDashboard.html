@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Product Manager Dashboard</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Product Manager Dashboard</h2>
+    <p id="pmInfo"></p>
+
+    <section>
+      <h3>Users (view & edit only)</h3>
+      <button id="pmRefreshBtn">Refresh List</button>
+      <div id="pmUserList" style="margin-top:12px;"></div>
+    </section>
+
+    <section style="margin-top: 24px;">
+      <h3>User Reviews / Feedback</h3>
+      <button id="pmRefreshReviewsBtn">Refresh Reviews</button>
+      <div id="pmReviewList" style="margin-top:12px;"></div>
+    </section>
+
+    <div style="margin-top:16px;">
+      <button id="pmLogout">Logout</button>
+    </div>
+  </div>
+
+  <!-- Reuse existing adminUsers.js (we add a small helper there) -->
+  <script src="adminUsers.js"></script>
+
+  <script>
+    let currentEditingUserId = null;
+
+    // Load users for Product Manager view
+    async function loadUsersForPM(containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "Loading users...";
+
+      try {
+        const res = await fetch('/webcafe/users');  // Adjust URL if needed
+        if (!res.ok) throw new Error("Failed to fetch users");
+
+        const users = await res.json();
+
+        // Filter out admins so PM only sees customers and roleA (or whatever you want)
+        const visibleUsers = users.filter(u => u.role !== 'admin');
+
+        if (visibleUsers.length === 0) {
+          container.innerHTML = "<p>No users found.</p>";
+          return;
+        }
+
+        // Render user list
+        container.innerHTML = visibleUsers.map(user => `
+          <div class="user-card" data-id="${user._id}">
+            <strong>${user.username}</strong> (${user.email})<br>
+            Role: ${user.role} <br>
+            <button onclick="editUser('${user._id}')">Edit</button>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        container.innerHTML = `<p style="color:red">Error loading users: ${err.message}</p>`;
+      }
+    }
+
+    // Edit user function with inline editable form
+    async function editUser(userId) {
+      currentEditingUserId = userId;
+      const container = document.getElementById('pmUserList');
+
+      try {
+        const res = await fetch(`/webcafe/users/${userId}`);
+        if (!res.ok) throw new Error('Failed to fetch user data');
+        const user = await res.json();
+
+        container.innerHTML = `
+          <h4>Edit User: ${user.username}</h4>
+          <form id="editUserForm">
+            <label>Username:<br><input type="text" name="username" value="${user.username}" required></label><br>
+            <label>Email:<br><input type="email" name="email" value="${user.email}" required></label><br>
+
+            <button type="submit">Save</button>
+            <button type="button" id="cancelEdit">Cancel</button>
+          </form>
+          <div id="editUserMessage"></div>
+        `;
+
+        // Handle form submission
+        document.getElementById('editUserForm').addEventListener('submit', async e => {
+          e.preventDefault();
+          const form = e.target;
+          const formData = new FormData(form);
+          const updatedData = {
+            username: formData.get('username'),
+            email: formData.get('email'),
+          };
+
+          try {
+            const updateRes = await fetch(`/webcafe/users/${userId}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(updatedData),
+            });
+
+            const updateResult = await updateRes.json();
+            const msgEl = document.getElementById('editUserMessage');
+            if (updateRes.ok) {
+              msgEl.style.color = 'green';
+              msgEl.innerText = 'User updated successfully! Reloading list...';
+              setTimeout(() => {
+                loadUsersForPM('pmUserList');
+              }, 1000);
+            } else {
+              msgEl.style.color = 'red';
+              msgEl.innerText = updateResult.message || 'Failed to update user.';
+            }
+          } catch (err) {
+            const msgEl = document.getElementById('editUserMessage');
+            msgEl.style.color = 'red';
+            msgEl.innerText = `Error: ${err.message}`;
+          }
+        });
+
+        // Cancel button reloads user list
+        document.getElementById('cancelEdit').addEventListener('click', () => {
+          loadUsersForPM('pmUserList');
+        });
+
+      } catch (err) {
+        container.innerHTML = `<p style="color:red">Error loading user data: ${err.message}</p>`;
+      }
+    }
+
+    // Load reviews for PM dashboard
+    async function loadReviewsForPM(containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "Loading reviews...";
+
+      try {
+        const res = await fetch('/reviews');
+        if (!res.ok) throw new Error("Failed to fetch reviews");
+
+        const reviews = await res.json();
+
+        if (reviews.length === 0) {
+          container.innerHTML = "<p>No reviews found.</p>";
+          return;
+        }
+
+        container.innerHTML = reviews.map(review => `
+          <div class="review-card" data-id="${review._id}" style="border:1px solid #ccc; margin-bottom:8px; padding:8px;">
+            <strong>${review.username}</strong> (${new Date(review.date).toLocaleDateString()})<br>
+            Rating: ${review.rating} / 5<br>
+            <em>${review.text}</em><br>
+            <button onclick="deleteReview('${review._id}')">Delete Review</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<p style="color:red">Error loading reviews: ${err.message}</p>`;
+      }
+    }
+
+    // Delete review function
+    async function deleteReview(reviewId) {
+      if (!confirm("Are you sure you want to delete this review?")) return;
+
+      try {
+        const res = await fetch(`/reviews/${reviewId}`, {
+          method: 'DELETE'
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          alert(result.message || "Review deleted.");
+          loadReviewsForPM('pmReviewList');
+        } else {
+          alert(result.message || "Failed to delete review.");
+        }
+      } catch (err) {
+        alert("Error deleting review: " + err.message);
+      }
+    }
+
+    // Page behavior
+    document.addEventListener('DOMContentLoaded', () => {
+      const role = localStorage.getItem('role');
+      if (!role) return window.location.href = 'adminLogin.html';
+
+      if (role !== 'product_manager' && role !== 'roleA') {
+        if (role === 'admin') return window.location.href = 'admin.html';
+        return window.location.href = 'adminLogin.html';
+      }
+
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      document.getElementById('pmInfo').textContent = `Logged in as: ${user.username || 'Product Manager'}`;
+
+      if (typeof loadUsersForPM === 'function') {
+        loadUsersForPM('pmUserList');
+      } else if (typeof loadUsersInto === 'function') {
+        loadUsersInto('pmUserList');
+      }
+
+      loadReviewsForPM('pmReviewList');
+
+      document.getElementById('pmRefreshBtn').addEventListener('click', () => {
+        if (typeof loadUsersForPM === 'function') loadUsersForPM('pmUserList');
+        else if (typeof loadUsersInto === 'function') loadUsersInto('pmUserList');
+      });
+
+      document.getElementById('pmRefreshReviewsBtn').addEventListener('click', () => {
+        loadReviewsForPM('pmReviewList');
+      });
+
+      document.getElementById('pmLogout').addEventListener('click', () => {
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
+        localStorage.removeItem('token');
+        window.location.href = 'adminLogin.html';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -272,7 +272,9 @@ app.post("/login", async (req, res) => {
 app.post("/admin/login", async (req, res) => {
     try {
         const { email, password } = req.body;
-        const admin = await User.findOne({ email, role: "admin" });
+        const admin = await User.findOne({ email, role: { $in: ["admin", "roleA", "product_manager"] } });
+        console.log("Login attempt for email:", email);
+        console.log("Found admin user:", admin);
 
         if (!admin) {
             return res.status(401).json({ message: "❌ Invalid admin credentials." });
@@ -286,6 +288,7 @@ app.post("/admin/login", async (req, res) => {
 
         admin.lastAttempt = new Date();
         const isMatch = await bcrypt.compare(password, admin.password);
+        console.log("Password match:", isMatch);
 
         if (!isMatch) {
             await admin.incrementLoginAttempts();
@@ -407,6 +410,55 @@ app.get("/webcafe/users", adminCheck, async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: "Error fetching users." });
     }
+});
+
+// Get single user by ID (for edit)
+app.get("/webcafe/users/:id", adminCheck, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password -passwordHistory");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: "Error fetching user data." });
+  }
+});
+
+// Admin update user general info (username, email, description)
+app.put('/webcafe/users/:id', adminCheck, async (req, res) => {
+  try {
+    const allowedUpdatesForPM = ['username', 'email', 'description'];
+    const allowedUpdatesForAdmin = ['username', 'email', 'description', 'role'];
+
+    // The role of the requester (admin, product_manager, etc.)
+    const requesterRole = req.user?.role || 'customer'; // Adjust based on your auth middleware
+
+    // Determine allowed fields based on requester role
+    const allowedUpdates = requesterRole === 'admin' ? allowedUpdatesForAdmin : allowedUpdatesForPM;
+
+    // Check if user tries to update disallowed fields (like 'role' for PM)
+    const updates = Object.keys(req.body);
+    const invalidFields = updates.filter(field => !allowedUpdates.includes(field));
+    if (invalidFields.length > 0) {
+      return res.status(400).json({ message: `Invalid fields to update: ${invalidFields.join(', ')}` });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Apply updates allowed for the requester
+    updates.forEach(update => {
+      user[update] = req.body[update];
+    });
+
+    await user.save();
+
+    res.json({ message: 'User updated successfully', user });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(500).json({ message: 'Server error updating user' });
+  }
 });
 
 // Admin update user role

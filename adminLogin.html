@@ -40,16 +40,25 @@
           msg.style.color = 'green';
           msg.innerText = "Login successful! Redirecting...";
 
-          // ✅ Save token & user ID for other pages
-          localStorage.setItem('authToken', data.token);
-          localStorage.setItem('adminId', data.adminId);
+          const admin = data.admin || {};
+          const role = admin.role || 'admin';
 
-          // Redirect to admin panel
+          // Save data
+          
+          localStorage.setItem('adminId', admin._id || '');
+          localStorage.setItem('user', JSON.stringify(admin));
+          localStorage.setItem('role', role);
+
+          // Redirect based on role
           setTimeout(() => {
-            window.location.href = "admin.html";
+            if (role === 'product_manager' || role === 'roleA') {
+              window.location.href = "pmDashboard.html";
+            } else {
+              window.location.href = "admin.html";
+            }
           }, 1000);
-
-        } else {
+        }
+        else {
           msg.style.color = 'red';
           msg.innerText = data.message || 'Login failed';
         }
