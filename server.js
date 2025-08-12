@@ -94,7 +94,7 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "Homepage.html"));
 });
 
-// Password Reset Route
+// reset password route
 app.post('/reset-password', async (req, res) => {
     const { email, newPassword } = req.body;
   
@@ -118,10 +118,12 @@ app.post('/reset-password', async (req, res) => {
       }
   
       // Prevent reuse of current/recent passwords
-      const usedBefore = await Promise.any([
+      const comparisons = await Promise.all([
         bcrypt.compare(newPassword, user.password),
         ...(user.passwordHistory || []).map(h => bcrypt.compare(newPassword, h))
-      ]).catch(() => false);
+      ]);
+  
+      const usedBefore = comparisons.some(result => result === true);
   
       if (usedBefore) {
         return res.status(400).json({ success: false, message: "You have used this password before. Choose a new one." });
@@ -160,6 +162,37 @@ app.put("/change-password/:id", async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found." });
     }
+
+     // FOR TESTING: Check if 1 minute has passed since last password change 
+     // if (user.passwordLastChanged) {
+     //   const now = Date.now();
+     //   const lastChanged = new Date(user.passwordLastChanged).getTime();
+     //   const diffMs = now - lastChanged;
+  
+     //   if (diffMs < 60000) {  // 60,000 = 1 minute
+     //     const secondsLeft = Math.ceil((60000 - diffMs) / 1000);
+     //      return res.status(429).json({
+     //      success: false,
+     //      message: `⏳ Please wait ${secondsLeft} more seconds before changing your password again.`
+     //     });
+     //   }
+     // }
+
+     // =====================CHANGE PASSWORDS AFTER ONE DAY OR 24 HOURS========================
+
+      if (user.passwordLastChanged) {
+        const now = Date.now();
+        const lastChanged = new Date(user.passwordLastChanged).getTime();
+        const diffMs = now - lastChanged;
+      
+        if (diffMs < 86400000) {  // 86,400,000 ms = 24 hours
+          const hoursLeft = Math.ceil((86400000 - diffMs) / (1000 * 60 * 60));
+          return res.status(429).json({
+             success: false,
+            message: `⏳ Please wait ${hoursLeft} more hour(s) before changing your password again.`
+          });
+        }
+      }
 
     // Verify old password
     const isMatch = await bcrypt.compare(oldPassword, user.password);
