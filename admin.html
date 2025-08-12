@@ -21,6 +21,16 @@
 <body>
   <h1>Admin User Interface</h1>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || (user.role !== "admin" && user.role !== "manager")) {
+            alert("Access denied.");
+            window.location.href = "homepage.html";
+        }
+    });
+    </script>
+
   <h2>Register</h2>
   <input id="reg-username" placeholder="Username" />
   <input id="reg-email" type="email" placeholder="Email" />
