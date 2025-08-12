@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
     email: String,
     password: String,
     passwordHistory: [String],
-    passwordLastChanged: { type: Date, default: Date.now },
+    passwordLastChanged: { type: Date, default: new Date(0) },
     firstName: String,
     lastName: String,
     description: String,
@@ -92,6 +92,179 @@ const Review = mongoose.model("Review", reviewSchema);
 // Homepage route (serve Homepage.html)
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "Homepage.html"));
+});
+
+// Password Reset Route
+app.post('/reset-password', async (req, res) => {
+    const { email, newPassword } = req.body;
+  
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: '❌ Email and new password are required.' });
+    }
+  
+    try {
+      const user = await User.findOne({ email });
+  
+      if (!user) {
+        return res.status(404).json({ message: '❌ No user found with that email.' });
+      }
+  
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({
+          message: '❌ Password must include uppercase, lowercase, number, special character, and be at least 8 characters.'
+        });
+      }
+  
+      const usedBefore = await Promise.any([
+        bcrypt.compare(newPassword, user.password),
+        ...(user.passwordHistory || []).map(oldHash => bcrypt.compare(newPassword, oldHash))
+      ]).catch(() => false);
+  
+      if (usedBefore) {
+        return res.status(400).json({
+          message: '⚠️ You’ve used this password before. Please choose a new one.'
+        });
+      }
+  
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+      const history = user.passwordHistory || [];
+      history.unshift(user.password);
+      if (history.length > 5) history.pop();
+  
+      user.password = hashedPassword;
+      user.passwordHistory = history;
+      user.passwordLastChanged = new Date();
+  
+      await user.save();
+  
+      res.json({ message: '✅ Password successfully reset!' });
+    } catch (error) {
+      console.error('❌ Error resetting password:', error);
+      res.status(500).json({ message: '❌ Server error while resetting password.' });
+    }
+  });
+
+// Change password (logged-in user) - verify old password first
+app.put("/change-password/:id", async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Old and new passwords are required." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Verify old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Old password is incorrect." });
+    }
+
+    // Validate new password complexity
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters and include uppercase, lowercase, a number and a special character."
+      });
+    }
+
+    // Prevent reuse of current/recent passwords
+    const usedBefore = await Promise.any([
+      bcrypt.compare(newPassword, user.password),
+      ...(user.passwordHistory || []).map(h => bcrypt.compare(newPassword, h))
+    ]).catch(() => false);
+
+    if (usedBefore) {
+      return res.status(400).json({ success: false, message: "You have used this password before. Choose a new one." });
+    }
+
+    // Push current password into history, keep last 5
+    const history = user.passwordHistory || [];
+    history.unshift(user.password);
+    if (history.length > 5) history.length = 5;
+
+    // Hash & set new password
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    user.passwordHistory = history;
+    user.passwordLastChanged = new Date();
+
+    await user.save();
+
+    return res.json({ success: true, message: "✅ Password changed successfully!" });
+  } catch (err) {
+    console.error("❌ Error in /change-password:", err);
+    return res.status(500).json({ success: false, message: "Server error while changing password." });
+  }
+});
+
+// ---------- FIXED: Update Profile (PUT /update-profile/:id) ----------
+app.put("/update-profile/:id", async (req, res) => {
+  try {
+    const { email, username, firstName, lastName, description } = req.body;
+
+    const updatedFields = {};
+    if (email) updatedFields.email = email;
+    if (username) updatedFields.username = username;
+    if (typeof firstName !== "undefined") updatedFields.firstName = firstName;
+    if (typeof lastName !== "undefined") updatedFields.lastName = lastName;
+    if (typeof description !== "undefined") updatedFields.description = description;
+
+    // findByIdAndUpdate returns the updated doc with { new: true }
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updatedFields, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // don't send password fields back
+    const userResponse = {
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      description: updatedUser.description,
+      avatar: updatedUser.avatar
+    };
+
+    res.json({ success: true, message: "✅ Profile updated successfully!", user: userResponse });
+  } catch (error) {
+    console.error("❌ Error updating profile:", error);
+    res.status(500).json({ success: false, message: "❌ Error updating profile." });
+  }
+});
+
+// Update Avatar
+app.put("/update-avatar/:id", upload.single("avatar"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "❌ No file uploaded." });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            { avatar: "/uploads/" + req.file.filename },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "❌ User not found." });
+        }
+
+        res.json({ message: "✅ Profile picture updated!", avatar: updatedUser.avatar });
+    } catch (err) {
+        console.error("❌ Error updating profile picture:", err);
+        res.status(500).json({ message: "Error updating profile picture." });
+    }
 });
 
 // Registration route (user)
@@ -333,26 +506,6 @@ app.post("/admin/login", async (req, res) => {
         console.error("❌ Error logging in admin:", err);
         res.status(500).json({ message: "Error logging in admin." });
     }
-});
-
-// Placeholder password reset route
-app.post('/reset-password', async (req, res) => {
-    res.status(501).json({ message: "Password reset route not implemented." });
-});
-
-// Placeholder change password route
-app.put("/change-password/:id", async (req, res) => {
-    res.status(501).json({ message: "Change password route not implemented." });
-});
-
-// Placeholder update profile route
-app.put("/update-profile/:id", async (req, res) => {
-    res.status(501).json({ message: "Update profile route not implemented." });
-});
-
-// Placeholder update avatar route
-app.put("/update-avatar/:id", upload.single("avatar"), async (req, res) => {
-    res.status(501).json({ message: "Update avatar route not implemented." });
 });
 
 // Reviews routes

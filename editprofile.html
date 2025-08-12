@@ -205,7 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
    document.getElementById("changePasswordBtn").addEventListener("click", async function () {
     const oldPassword = document.getElementById("oldPassword").value.trim();
     const newPassword = document.getElementById("newPassword").value.trim();
-    const confirmNewPassword = document.getElementById("confirmNewPassword").value.trim();
+    const confirmNewPassword = document.getElementById("confirmPassword").value.trim();
     const passwordMessage = document.getElementById("passwordMessage");
 
     passwordMessage.style.display = "none";
@@ -228,37 +228,42 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/change-password/${user._id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ oldPassword, newPassword })
-      });
+  const response = await fetch(`http://localhost:3000/change-password/${user._id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ oldPassword, newPassword })
+  });
 
-      const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
 
-      if (response.ok) {
-        passwordMessage.textContent = data.message || "✅ Password changed successfully!";
-        passwordMessage.style.color = "white";
-        passwordMessage.style.background = "green";
-        passwordMessage.style.display = "block";
+  if (response.ok) {
+    passwordMessage.textContent = data.message || "✅ Password changed successfully!";
+    passwordMessage.style.color = "white";
+    passwordMessage.style.background = "green";
+    passwordMessage.style.display = "block";
 
-        // Clear password fields
-        document.getElementById("oldPassword").value = "";
-        document.getElementById("newPassword").value = "";
-        document.getElementById("confirmNewPassword").value = "";
-      } else {
-        passwordMessage.textContent = data.message || "❌ Error changing password.";
-        passwordMessage.style.color = "white";
-        passwordMessage.style.background = "red";
-        passwordMessage.style.display = "block";
-      }
-    } catch (err) {
-      console.error("Error changing password:", err);
-      passwordMessage.textContent = "An error occurred. Please try again.";
-      passwordMessage.style.color = "white";
-      passwordMessage.style.background = "red";
-      passwordMessage.style.display = "block";
-    }
+    // Clear password fields
+    document.getElementById("oldPassword").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("confirmPassword").value = "";
+  } else {
+    passwordMessage.textContent = data.message || "❌ Error changing password.";
+    passwordMessage.style.color = "white";
+    passwordMessage.style.background = "red";
+    passwordMessage.style.display = "block";
+  }
+} catch (err) {
+  console.error("Error changing password:", err);
+  passwordMessage.textContent = "An error occurred. Please try again.";
+  passwordMessage.style.color = "white";
+  passwordMessage.style.background = "red";
+  passwordMessage.style.display = "block";
+}
   });
 });
 </script>
